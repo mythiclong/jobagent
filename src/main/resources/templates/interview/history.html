@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 模拟面试历史</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='interview')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="section-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Interview History</div>
+                    <h1 class="page-title">模拟面试历史</h1>
+                    <p class="page-description">按 Session 汇总展示历史面试结果。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/history-center}">返回历史记录中心</a>
+                    <a class="btn btn-primary" th:href="@{/interview}">开始新面试</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-card spacer-top">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Session ID</th>
+                    <th>用户名称</th>
+                    <th>岗位名称</th>
+                    <th>总评</th>
+                    <th>题目数</th>
+                    <th>时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(sessions)}">
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <h2 class="empty-title">还没有模拟面试记录</h2>
+                            <p class="empty-text">先完成一轮模拟面试后再查看历史。</p>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:each="sessionSummary : ${sessions}">
+                    <td th:text="${sessionSummary.sessionId}">session123</td>
+                    <td th:text="${userNameMap[sessionSummary.userProfileId] != null ? userNameMap[sessionSummary.userProfileId] : '画像已删除'}">张同学</td>
+                    <td th:text="${jobNameMap[sessionSummary.jobPostId] != null ? jobNameMap[sessionSummary.jobPostId] : '岗位已删除'}">Java后端实习生</td>
+                    <td><span class="score-strip" th:text="${sessionSummary.totalScore}">78</span></td>
+                    <td th:text="${sessionSummary.questionCount}">4</td>
+                    <td th:text="${#temporals.format(sessionSummary.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2026-03-10 18:00:00</td>
+                    <td>
+                        <div class="table-actions">
+                            <a class="btn btn-primary" th:href="@{/interview/history/{sessionId}(sessionId=${sessionSummary.sessionId})}">查看详情</a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
+</body>
+</html>

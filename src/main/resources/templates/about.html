@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 项目介绍</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='about')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Project Intro</div>
+                    <h1 class="page-title">一个面向校招生的求职准备工具</h1>
+                    <p class="page-description">
+                        职航Agent帮助正在准备实习和校招的同学更快看清岗位选择、简历短板和面试准备重点，
+                        把零散动作收成一条能持续推进的求职准备路径。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-primary" th:href="@{/login}">登录开始使用</a>
+                    <a class="btn btn-secondary" th:href="@{/}">返回首页</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <div class="info-grid">
+                <article class="info-card">
+                    <div class="section-pill">适合谁</div>
+                    <ul class="bullet-list spacer-top">
+                        <li class="bullet-item">
+                            <strong>正在准备实习或校招的同学</strong>
+                            <span>希望尽快明确目标岗位，并把准备动作推进到可投递状态。</span>
+                        </li>
+                        <li class="bullet-item">
+                            <strong>想补齐简历和项目表达的人</strong>
+                            <span>需要知道自己的简历还差什么、下一步该先补什么。</span>
+                        </li>
+                        <li class="bullet-item">
+                            <strong>想提前做面试训练的人</strong>
+                            <span>希望围绕目标岗位提前练习问答和复盘表现。</span>
+                        </li>
+                    </ul>
+                </article>
+                <article class="info-card">
+                    <div class="section-pill">你能获得什么</div>
+                    <ul class="bullet-list spacer-top">
+                        <li class="bullet-item">
+                            <strong>更清晰的岗位优先级</strong>
+                            <span>先看清更值得投递和准备的岗位，再安排后续动作。</span>
+                        </li>
+                        <li class="bullet-item">
+                            <strong>更具体的补强方向</strong>
+                            <span>把短板变成学习步骤、项目建议和投递节奏建议。</span>
+                        </li>
+                        <li class="bullet-item">
+                            <strong>更连贯的准备记录</strong>
+                            <span>统一回看岗位匹配、简历优化和模拟面试的结果。</span>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">How It Works</div>
+                    <h2 class="page-title">开始使用很简单</h2>
+                </div>
+            </div>
+            <div class="entry-grid">
+                <article class="feature-card">
+                    <h3 class="feature-title">1. 建立求职档案</h3>
+                    <p class="feature-description">先填写目标方向、技能、项目经历和期望城市。</p>
+                </article>
+                <article class="feature-card">
+                    <h3 class="feature-title">2. 查看岗位匹配</h3>
+                    <p class="feature-description">先从推荐岗位里看清哪些岗位更值得优先准备。</p>
+                </article>
+                <article class="feature-card">
+                    <h3 class="feature-title">3. 继续补强和练习</h3>
+                    <p class="feature-description">去做简历优化、补强方案和模拟面试，持续推进准备进度。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <div class="summary-grid">
+                <article class="info-card">
+                    <div class="section-pill">当前内容规模</div>
+                    <ul class="bullet-list spacer-top">
+                        <li class="bullet-item"><strong>岗位数量</strong><span th:text="${jobCount + ' 条'}">0 条</span></li>
+                        <li class="bullet-item"><strong>档案数量</strong><span th:text="${profileCount + ' 份'}">0 份</span></li>
+                    </ul>
+                </article>
+                <article class="info-card">
+                    <div class="section-pill">最近使用情况</div>
+                    <ul class="bullet-list spacer-top">
+                        <li class="bullet-item"><strong>简历诊断记录</strong><span th:text="${resumeReviewCount + ' 次'}">0 次</span></li>
+                        <li class="bullet-item"><strong>面试训练记录</strong><span th:text="${interviewSessionCount + ' 次'}">0 次</span></li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

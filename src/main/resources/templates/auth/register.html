@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 注册</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='register')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="form-split">
+            <article class="form-card glow-card">
+                <div class="eyebrow">Create Account</div>
+                <h1 class="page-title">创建你的求职账号</h1>
+                <p class="page-description">保存档案、记录进度、持续优化。注册完成后会直接进入你的用户主线。</p>
+
+                <form class="field-grid spacer-top" th:action="@{/register}" th:object="${registerForm}" method="post">
+                    <div class="field-group" th:classappend="${#fields.hasErrors('username')} ? ' has-error'">
+                        <label for="username">用户名</label>
+                        <input class="input-field" id="username" type="text" th:field="*{username}" autocomplete="username"
+                               placeholder="用于登录，需唯一" required>
+                        <div class="field-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">用户名错误</div>
+                    </div>
+
+                    <div class="field-group" th:classappend="${#fields.hasErrors('displayName')} ? ' has-error'">
+                        <label for="displayName">称呼</label>
+                        <input class="input-field" id="displayName" type="text" th:field="*{displayName}"
+                               placeholder="导航里会展示这个名字" required>
+                        <div class="field-error" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}">称呼错误</div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="email">邮箱</label>
+                        <input class="input-field" id="email" type="email" th:field="*{email}" autocomplete="email"
+                               placeholder="可选，用于后续扩展">
+                    </div>
+
+                    <div class="field-group" th:classappend="${#fields.hasErrors('password')} ? ' has-error'">
+                        <label for="password">密码</label>
+                        <input class="input-field" id="password" type="password" th:field="*{password}" autocomplete="new-password"
+                               placeholder="至少 6 位" required>
+                        <div class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">密码错误</div>
+                    </div>
+
+                    <div class="field-group" th:classappend="${#fields.hasErrors('confirmPassword')} ? ' has-error'">
+                        <label for="confirmPassword">确认密码</label>
+                        <input class="input-field" id="confirmPassword" type="password" th:field="*{confirmPassword}" autocomplete="new-password"
+                               placeholder="再次输入密码" required>
+                        <div class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">确认密码错误</div>
+                    </div>
+
+                    <div class="actions-row">
+                        <button class="btn btn-primary" type="submit">注册并进入产品</button>
+                        <a class="btn btn-secondary" th:href="@{/login}">已有账号，去登录</a>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="info-card helper-card">
+                <div class="section-pill">注册后会开启</div>
+                <ul class="bullet-list spacer-top">
+                    <li class="bullet-item">
+                        <strong>专属档案空间</strong>
+                        <span>你的求职档案会绑定到账号，不再和其他人的演示数据混在一起。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>连续记录中心</strong>
+                        <span>岗位匹配、简历优化、补强方案和面试练习都会自动归属到你的账号。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>清晰的下一步</strong>
+                        <span>登录后会直接回到你的用户首页，从当前进度继续推进，不用重复找入口。</span>
+                    </li>
+                </ul>
+                <div class="actions-row spacer-top">
+                    <a class="btn btn-secondary" th:href="@{/about}">项目介绍</a>
+                    <a class="btn btn-primary" th:href="@{/}">返回首页</a>
+                </div>
+            </aside>
+        </section>
+    </div>
+</main>
+</body>
+</html>

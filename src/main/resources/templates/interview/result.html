@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 模拟面试结果</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='interview')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Interview Result</div>
+                    <h1 class="page-title">模拟面试结果</h1>
+                    <p class="page-description">这一页默认展示整理后的中文题目、评分反馈和改进建议，便于学生直接复盘。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/interview/history}">查看历史记录</a>
+                    <a class="btn btn-secondary" th:href="@{/history-center}">我的记录</a>
+                    <a class="btn btn-primary" th:href="@{/interview}">继续模拟面试</a>
+                </div>
+            </div>
+
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <div class="score-strip">总评 <span th:text="${totalScore}">78</span></div>
+                    <span class="small-note">总评分为本轮题目的平均得分</span>
+                </div>
+                <div class="content-block">
+                    <strong>Session</strong>
+                    <span th:text="${sessionId}">session123</span>
+                </div>
+                <div class="content-block">
+                    <strong>用户档案</strong>
+                    <span th:text="${userProfile.studentName + ' / ' + userProfile.targetDirection}">张同学 / Java后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>目标岗位</strong>
+                    <span th:text="${jobPost.displayTitle + ' / ' + jobPost.jobDirection}">Java后端岗位 / Java后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>整体点评</strong>
+                    <span th:text="${overallComment}">回答有基础，但还可以更具体。</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="result-stack spacer-top">
+            <article class="result-card glow-card" th:each="record, stat : ${records}">
+                <div class="score-strip">题目得分 <span th:text="${record.answerScore}">82</span></div>
+                <div class="type-pill"
+                     th:text="${questionMap[record.questionId] != null ? questionMap[record.questionId].displayCategory : '面试题'}">原理题</div>
+                <h2 class="card-title"
+                    th:text="${stat.count + '. ' + (questionMap[record.questionId] != null ? questionMap[record.questionId].displayTitle : record.questionText)}">
+                    1. 请做 1 分钟自我介绍
+                </h2>
+
+                <div class="inline-list spacer-top" th:if="${questionMap[record.questionId] != null}">
+                    <span th:each="tag : ${questionMap[record.questionId].displayTagList}" th:text="${tag}">Java后端</span>
+                </div>
+
+                <div class="content-block spacer-top" th:if="${questionMap[record.questionId] != null}">
+                    <strong>考察点</strong>
+                    <span th:text="${questionMap[record.questionId].keyPointSummary != null and !#strings.isEmpty(questionMap[record.questionId].keyPointSummary) ? questionMap[record.questionId].keyPointSummary : '表达结构与岗位匹配度'}">
+                        并发基础 / 调度理解
+                    </span>
+                </div>
+
+                <details class="content-block spacer-top"
+                         th:if="${questionMap[record.questionId] != null and questionMap[record.questionId].rawTitle != null and !#strings.isEmpty(questionMap[record.questionId].rawTitle) and questionMap[record.questionId].rawTitle != questionMap[record.questionId].displayTitle}">
+                    <summary class="small-note">查看原题</summary>
+                    <span th:text="${questionMap[record.questionId].rawTitle}">What is the difference between process and thread?</span>
+                </details>
+
+                <div class="content-block spacer-top">
+                    <strong>你的回答</strong>
+                    <pre class="preformatted" th:text="${record.userAnswer}">回答内容</pre>
+                </div>
+                <div class="content-block">
+                    <strong>点评</strong>
+                    <span th:text="${record.answerComment}">回答完整</span>
+                </div>
+                <div class="content-block">
+                    <strong>改进建议</strong>
+                    <span th:text="${record.improvementSuggestion}">建议补充量化结果</span>
+                </div>
+            </article>
+        </section>
+    </div>
+</main>
+</body>
+</html>

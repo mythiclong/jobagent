@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${userProfile.id == null} ? '职航Agent | 新建求职档案' : '职航Agent | 编辑求职档案'">职航Agent | 求职档案</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='profiles')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <div class="page-header">
+            <div class="page-header-copy">
+                <div class="eyebrow">Profile Editor</div>
+                <h1 class="page-title" th:text="${userProfile.id == null} ? '新建求职档案' : '编辑求职档案'">求职档案</h1>
+                <p class="page-description">这页负责维护完整档案内容，保存后会直接回到“求职档案”主中心。</p>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-secondary" th:href="@{/career-profile}">返回主中心</a>
+            </div>
+        </div>
+
+        <section class="form-split">
+            <article class="form-card glow-card">
+                <form th:action="@{/profiles}" th:object="${userProfile}" method="post" class="field-grid">
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="studentName">档案名称 / 显示名</label>
+                            <input class="input-field" type="text" id="studentName" th:field="*{studentName}" required placeholder="例如：张同学 / 王同学">
+                        </div>
+                        <div class="field-group">
+                            <label for="grade">年级</label>
+                            <input class="input-field" type="text" id="grade" th:field="*{grade}" required placeholder="例如：大三 / 2027届">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="major">专业</label>
+                            <input class="input-field" type="text" id="major" th:field="*{major}" required placeholder="例如：软件工程 / 计算机科学与技术">
+                        </div>
+                        <div class="field-group">
+                            <label for="targetRole">目标岗位</label>
+                            <input class="input-field" type="text" id="targetRole" th:field="*{targetRole}" placeholder="例如：Java 后端开发 / 产品经理">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="targetDirection">目标岗位方向</label>
+                            <input class="input-field" type="text" id="targetDirection" th:field="*{targetDirection}" required placeholder="例如：后端开发 / 前端开发 / 产品方向">
+                        </div>
+                        <div class="field-group">
+                            <label for="acceptableJobNature">岗位性质 / 当前阶段</label>
+                            <input class="input-field" type="text" id="acceptableJobNature" th:field="*{acceptableJobNature}" placeholder="例如：实习 / 校招 / 全职">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="targetCity">目标城市</label>
+                            <input class="input-field" type="text" id="targetCity" th:field="*{targetCity}" placeholder="例如：上海">
+                        </div>
+                        <div class="field-group">
+                            <label for="acceptableCities">接受城市范围</label>
+                            <input class="input-field" type="text" id="acceptableCities" th:field="*{acceptableCities}" placeholder="例如：上海、杭州、苏州">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label for="expectedSalary">期望薪资</label>
+                            <input class="input-field" type="text" id="expectedSalary" th:field="*{expectedSalary}" placeholder="例如：6k-9k/月">
+                        </div>
+                        <div class="field-group">
+                            <label for="targetIndustry">目标行业</label>
+                            <input class="input-field" type="text" id="targetIndustry" th:field="*{targetIndustry}" placeholder="例如：企业服务 / SaaS / 互联网">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="skills">技能关键词</label>
+                        <textarea class="textarea-field" id="skills" th:field="*{skills}" placeholder="例如：Java、Spring Boot、MySQL、Redis、Git"></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="projectExperience">项目经历</label>
+                        <textarea class="textarea-field" id="projectExperience" th:field="*{projectExperience}" placeholder="写清楚项目背景、你的职责、关键动作和结果"></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="careerGoal">职业目标描述</label>
+                        <textarea class="textarea-field" id="careerGoal" th:field="*{careerGoal}" placeholder="例如：先拿到后端实习，再持续补齐项目深度和面试表达"></textarea>
+                    </div>
+
+                    <div class="actions-row">
+                        <button class="btn btn-primary" type="submit">保存档案</button>
+                        <a class="btn btn-secondary" th:href="@{/career-profile}">返回主中心</a>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="info-card helper-card">
+                <div class="section-pill">填写建议</div>
+                <ul class="bullet-list spacer-top">
+                    <li class="bullet-item">
+                        <strong>目标岗位和方向要分开写</strong>
+                        <span>例如“Java 后端开发”是目标岗位，“后端开发”是方向，后续模块会分别读取。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>技能与项目要尽量具体</strong>
+                        <span>岗位匹配、补强方案和模拟面试都会直接读取这里的技能关键词和项目经历。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>偏好字段越清楚，推荐越准</strong>
+                        <span>目标城市、薪资和岗位性质越明确，系统越容易给出更贴近的匹配和下一步建议。</span>
+                    </li>
+                </ul>
+            </aside>
+        </section>
+    </div>
+</main>
+</body>
+</html>

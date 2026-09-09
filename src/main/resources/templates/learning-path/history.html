@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 补强方案历史</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='strength-plan')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Strength Plan History</div>
+                    <h1 class="page-title">补强方案历史</h1>
+                    <p class="page-description">
+                        这里按目标岗位查看每次补强方案生成结果，并串起关联的岗位匹配与简历优化记录。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/strength-plan}">新建方案</a>
+                    <a class="btn btn-primary" th:href="@{/history-center}">我的记录</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="result-stack spacer-top">
+            <div class="empty-state" th:if="${#lists.isEmpty(records)}">
+                <h2 class="empty-title">暂无补强方案记录</h2>
+                <p class="empty-text">先从岗位匹配结果进入一次补强方案生成，再回到这里查看历史。</p>
+            </div>
+
+            <article class="result-card glow-card" th:each="record : ${records}">
+                <h2 class="card-title" th:text="${jobNameMap[record.targetJobId] != null ? jobNameMap[record.targetJobId] : '岗位信息缺失'}">Java 后端</h2>
+                <div class="content-block">
+                    <strong>用户</strong>
+                    <span th:text="${userNameMap[record.userProfileId] != null ? userNameMap[record.userProfileId] : '用户信息缺失'}">张同学</span>
+                </div>
+                <div class="content-block">
+                    <strong>关联岗位匹配</strong>
+                    <span th:text="${relatedMatchSummaryMap[record.id]}">匹配记录 #12 / 分数 82</span>
+                </div>
+                <div class="content-block" th:if="${relatedResumeEnhanceIdMap[record.id] != null}">
+                    <strong>关联简历优化</strong>
+                    <span th:text="${'记录 #' + relatedResumeEnhanceIdMap[record.id]}">记录 #8</span>
+                </div>
+                <div class="content-block">
+                    <strong>生成时间</strong>
+                    <span th:text="${record.createdAt != null ? #temporals.format(record.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-13 10:00:00</span>
+                </div>
+                <div class="actions-row">
+                    <a class="btn btn-primary" th:href="@{/strength-plan/{id}(id=${record.id})}">查看详情</a>
+                    <a class="btn btn-secondary"
+                       th:if="${relatedMatchIdMap[record.id] != null}"
+                       th:href="@{/match/record/{id}(id=${relatedMatchIdMap[record.id]})}">查看关联匹配</a>
+                    <a class="btn btn-secondary"
+                       th:if="${relatedResumeEnhanceIdMap[record.id] != null}"
+                       th:href="@{/resume-optimize/{id}(id=${relatedResumeEnhanceIdMap[record.id]})}">查看简历优化</a>
+                </div>
+            </article>
+        </section>
+    </div>
+</main>
+</body>
+</html>

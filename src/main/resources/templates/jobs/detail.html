@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 岗位详情</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='jobs')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Job Detail</div>
+                    <h1 class="page-title">管理员岗位详情</h1>
+                    <p class="page-description">这里会同时展示标准化岗位字段和最近一次校招来源快照，便于核查导入是否完整保留了 Excel 信息。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/jobs}">返回岗位管理</a>
+                    <a class="btn btn-primary" th:href="@{/jobs/edit/{id}(id=${jobPost.id})}">编辑岗位</a>
+                </div>
+            </div>
+
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <strong>岗位名称</strong>
+                    <span th:text="${jobPost.displayTitle}">Java后端工程师</span>
+                </div>
+                <div class="content-block">
+                    <strong>岗位方向 / 公司</strong>
+                    <span th:text="${jobPost.jobDirection + ' / ' + (jobPost.companyName != null and !#strings.isEmpty(jobPost.companyName) ? jobPost.companyName : '待补充')}">
+                        Java后端 / 示例公司
+                    </span>
+                </div>
+                <div class="content-block">
+                    <strong>来源 / 职位ID</strong>
+                    <span th:text="${(jobPost.sourceName != null and !#strings.isEmpty(jobPost.sourceName) ? jobPost.sourceName : '待补充') + ' / ' + (jobPost.sourceJobId != null and !#strings.isEmpty(jobPost.sourceJobId) ? jobPost.sourceJobId : '-')}">
+                        SCHOOL_JOB_EXCEL / JOB-1001
+                    </span>
+                </div>
+                <div class="content-block">
+                    <strong>最近更新时间</strong>
+                    <span th:text="${jobPost.updatedAt != null ? #temporals.format(jobPost.updatedAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-17 20:10:00</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="split-summary spacer-top">
+            <article class="section-card">
+                <h2 class="card-title">标准化岗位字段</h2>
+                <div class="meta-grid spacer-top">
+                    <div class="meta-item">
+                        <span class="meta-label">招聘标题</span>
+                        <span class="meta-value" th:text="${jobPost.jobTitle != null and !#strings.isEmpty(jobPost.jobTitle) ? jobPost.jobTitle : '-'}">2026 校招 Java 后端工程师</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">职位性质</span>
+                        <span class="meta-value" th:text="${jobPost.jobNature != null and !#strings.isEmpty(jobPost.jobNature) ? jobPost.jobNature : '-'}">全职</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">学历要求</span>
+                        <span class="meta-value" th:text="${jobPost.educationRequirement != null and !#strings.isEmpty(jobPost.educationRequirement) ? jobPost.educationRequirement : '-'}">本科</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">专业要求</span>
+                        <span class="meta-value" th:text="${jobPost.majorRequirement != null and !#strings.isEmpty(jobPost.majorRequirement) ? jobPost.majorRequirement : '-'}">计算机相关</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">招聘人数</span>
+                        <span class="meta-value" th:text="${jobPost.headCount != null ? jobPost.headCount : '-'}">3</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">薪资范围</span>
+                        <span class="meta-value"
+                              th:text="${jobPost.salaryRangeDisplay}">
+                            8000 ~ 12000
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">公司地址</span>
+                        <span class="meta-value" th:text="${jobPost.companyAddress != null and !#strings.isEmpty(jobPost.companyAddress) ? jobPost.companyAddress : '-'}">郑州高新区</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">原始链接</span>
+                        <a class="resource-link meta-value"
+                           th:if="${jobPost.jobUrl != null and !#strings.isEmpty(jobPost.jobUrl)}"
+                           th:href="${jobPost.jobUrl}" target="_blank" rel="noopener noreferrer"
+                           th:text="${jobPost.jobUrl}">https://example.com/job/1</a>
+                        <span class="meta-value" th:if="${jobPost.jobUrl == null or #strings.isEmpty(jobPost.jobUrl)}">-</span>
+                    </div>
+                </div>
+                <div class="content-block spacer-top">
+                    <strong>岗位详情</strong>
+                    <pre class="preformatted" th:text="${jobPost.jobDescription != null and !#strings.isEmpty(jobPost.jobDescription) ? jobPost.jobDescription : '暂无标准化岗位详情'}">岗位详情</pre>
+                </div>
+            </article>
+
+            <article class="section-card">
+                <h2 class="card-title">校招来源信息</h2>
+                <div class="content-block spacer-top" th:if="${latestSourceSnapshot == null}">
+                    <strong>还没有校招来源快照</strong>
+                    <span class="small-note">当前岗位可能来自手动录入，或尚未经过 Excel 导入。</span>
+                </div>
+                <div th:if="${latestSourceSnapshot != null}">
+                    <div class="meta-grid spacer-top">
+                        <div class="meta-item">
+                            <span class="meta-label">原始职位ID</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.sourceJobId}">JOB-1001</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">招聘类型</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.recruitType != null and !#strings.isEmpty(latestSourceSnapshot.recruitType) ? latestSourceSnapshot.recruitType : '-'}">校招</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">招聘标题</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.recruitTitle != null and !#strings.isEmpty(latestSourceSnapshot.recruitTitle) ? latestSourceSnapshot.recruitTitle : '-'}">2026 校招 Java 后端工程师</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">职位性质</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.jobNatureRaw != null and !#strings.isEmpty(latestSourceSnapshot.jobNatureRaw) ? latestSourceSnapshot.jobNatureRaw : '-'}">全职</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">学历要求</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.educationRequirementRaw != null and !#strings.isEmpty(latestSourceSnapshot.educationRequirementRaw) ? latestSourceSnapshot.educationRequirementRaw : '-'}">本科</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">专业要求</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.majorRequirementRaw != null and !#strings.isEmpty(latestSourceSnapshot.majorRequirementRaw) ? latestSourceSnapshot.majorRequirementRaw : '-'}">计算机相关</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">招聘人数</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.headCountRaw != null and !#strings.isEmpty(latestSourceSnapshot.headCountRaw) ? latestSourceSnapshot.headCountRaw : '-'}">3</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">薪资范围</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.salaryRangeText}">8000 ~ 12000</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">公司简称</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.companyShortName != null and !#strings.isEmpty(latestSourceSnapshot.companyShortName) ? latestSourceSnapshot.companyShortName : '-'}">示例</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">福利标签</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.welfareTags != null and !#strings.isEmpty(latestSourceSnapshot.welfareTags) ? latestSourceSnapshot.welfareTags : '-'}">餐补,住房补贴</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">统一社会信用代码</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.unifiedCreditCode != null and !#strings.isEmpty(latestSourceSnapshot.unifiedCreditCode) ? latestSourceSnapshot.unifiedCreditCode : '-'}">91410000TEST001</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">行业代码</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.industryCode != null and !#strings.isEmpty(latestSourceSnapshot.industryCode) ? latestSourceSnapshot.industryCode : '-'}">IT</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">公司性质</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.companyTypeRaw != null and !#strings.isEmpty(latestSourceSnapshot.companyTypeRaw) ? latestSourceSnapshot.companyTypeRaw : '-'}">民营</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">公司规模</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.companySizeRaw != null and !#strings.isEmpty(latestSourceSnapshot.companySizeRaw) ? latestSourceSnapshot.companySizeRaw : '-'}">500-999人</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">公司地区代码</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.companyRegionCode != null and !#strings.isEmpty(latestSourceSnapshot.companyRegionCode) ? latestSourceSnapshot.companyRegionCode : '-'}">410100</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">公司详细地址</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.companyAddressRaw != null and !#strings.isEmpty(latestSourceSnapshot.companyAddressRaw) ? latestSourceSnapshot.companyAddressRaw : '-'}">郑州高新区科学大道 1 号</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">公司网址</span>
+                            <a class="resource-link meta-value"
+                               th:if="${latestSourceSnapshot.companyWebsiteRaw != null and !#strings.isEmpty(latestSourceSnapshot.companyWebsiteRaw)}"
+                               th:href="${latestSourceSnapshot.companyWebsiteRaw}" target="_blank" rel="noopener noreferrer"
+                               th:text="${latestSourceSnapshot.companyWebsiteRaw}">https://example.com</a>
+                            <span class="meta-value" th:if="${latestSourceSnapshot.companyWebsiteRaw == null or #strings.isEmpty(latestSourceSnapshot.companyWebsiteRaw)}">-</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">是否公开发布</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.isPublicRaw != null and !#strings.isEmpty(latestSourceSnapshot.isPublicRaw) ? latestSourceSnapshot.isPublicRaw : '-'}">是</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">下线时间</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.offlineTimeRaw != null and !#strings.isEmpty(latestSourceSnapshot.offlineTimeRaw) ? latestSourceSnapshot.offlineTimeRaw : '-'}">2026-04-01 18:00:00</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">职位原始发布时间</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.sourcePublishTimeRaw != null and !#strings.isEmpty(latestSourceSnapshot.sourcePublishTimeRaw) ? latestSourceSnapshot.sourcePublishTimeRaw : '-'}">2026-03-01 10:00:00</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">最近导入批次号</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.importBatchNo != null and !#strings.isEmpty(latestSourceSnapshot.importBatchNo) ? latestSourceSnapshot.importBatchNo : '-'}">JOBEXCEL-20260317183000-ABCD</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">最近导入文件名</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.importFileName != null and !#strings.isEmpty(latestSourceSnapshot.importFileName) ? latestSourceSnapshot.importFileName : '-'}">school-jobs.xlsx</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Excel 行号</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.sourceRowNumber != null ? latestSourceSnapshot.sourceRowNumber : '-'}">2</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">快照保存时间</span>
+                            <span class="meta-value" th:text="${latestSourceSnapshot.createdAt != null ? #temporals.format(latestSourceSnapshot.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-17 20:12:00</span>
+                        </div>
+                    </div>
+
+                    <div class="content-block spacer-top">
+                        <strong>原始职位详情</strong>
+                        <pre class="preformatted"
+                             th:text="${latestSourceSnapshot.jobDetailRaw != null and !#strings.isEmpty(latestSourceSnapshot.jobDetailRaw) ? latestSourceSnapshot.jobDetailRaw : '暂无原始职位详情'}">
+                            原始职位详情
+                        </pre>
+                    </div>
+
+                    <div class="content-block">
+                        <strong>原始访问链接</strong>
+                        <a class="resource-link"
+                           th:if="${latestSourceSnapshot.jobUrlRaw != null and !#strings.isEmpty(latestSourceSnapshot.jobUrlRaw)}"
+                           th:href="${latestSourceSnapshot.jobUrlRaw}" target="_blank" rel="noopener noreferrer"
+                           th:text="${latestSourceSnapshot.jobUrlRaw}">https://example.com/job/1</a>
+                        <span th:if="${latestSourceSnapshot.jobUrlRaw == null or #strings.isEmpty(latestSourceSnapshot.jobUrlRaw)}">-</span>
+                    </div>
+
+                    <details class="content-block spacer-top" th:if="${latestSourceSnapshot.rawFieldJson != null and !#strings.isEmpty(latestSourceSnapshot.rawFieldJson)}">
+                        <summary class="small-note">查看完整原始字段 JSON</summary>
+                        <pre class="preformatted" th:text="${latestSourceSnapshot.rawFieldJson}">{"职位ID":"JOB-1001"}</pre>
+                    </details>
+                </div>
+            </article>
+        </section>
+
+        <section class="table-card spacer-top" th:if="${not #lists.isEmpty(recentSourceSnapshots)}">
+            <div class="page-header jobs-section-header">
+                <div class="page-header-copy">
+                    <h2 class="card-title">最近导入快照</h2>
+                    <p class="page-description">保留最近几次导入批次，方便回溯同一职位的来源变化。</p>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>批次号</th>
+                        <th>文件名</th>
+                        <th>行号</th>
+                        <th>招聘标题</th>
+                        <th>公司名称</th>
+                        <th>保存时间</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="snapshot : ${recentSourceSnapshots}">
+                        <td th:text="${snapshot.importBatchNo != null and !#strings.isEmpty(snapshot.importBatchNo) ? snapshot.importBatchNo : '-'}">JOBEXCEL-20260317183000-ABCD</td>
+                        <td th:text="${snapshot.importFileName != null and !#strings.isEmpty(snapshot.importFileName) ? snapshot.importFileName : '-'}">school-jobs.xlsx</td>
+                        <td th:text="${snapshot.sourceRowNumber != null ? snapshot.sourceRowNumber : '-'}">2</td>
+                        <td th:text="${snapshot.recruitTitle != null and !#strings.isEmpty(snapshot.recruitTitle) ? snapshot.recruitTitle : '-'}">2026 校招 Java 后端工程师</td>
+                        <td th:text="${snapshot.companyNameRaw != null and !#strings.isEmpty(snapshot.companyNameRaw) ? snapshot.companyNameRaw : '-'}">示例公司</td>
+                        <td th:text="${snapshot.createdAt != null ? #temporals.format(snapshot.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-17 20:12:00</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 面试题目表单</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='admin-questions')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="form-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Question Form</div>
+                    <h1 class="page-title" th:text="${question.id == null ? '新增面试题目' : '编辑面试题目'}">新增面试题目</h1>
+                    <p class="page-description">按岗位方向维护题目内容，供模拟面试模块抽题使用。</p>
+                </div>
+            </div>
+
+            <form class="field-grid spacer-top" th:action="@{/admin/questions}" th:object="${question}" method="post">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="field-group">
+                    <label for="jobDirection">岗位方向</label>
+                    <input class="input-field" id="jobDirection" th:field="*{jobDirection}" required placeholder="例如：后端开发">
+                </div>
+
+                <div class="field-group">
+                    <label for="questionType">题目类型</label>
+                    <input class="input-field" id="questionType" th:field="*{questionType}" required placeholder="例如：项目题 / 场景题">
+                </div>
+
+                <div class="field-group">
+                    <label for="questionText">题目内容</label>
+                    <textarea class="textarea-field" id="questionText" th:field="*{questionText}" required
+                              placeholder="请输入面试题目"></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label for="referenceAnswer">参考答案（可选）</label>
+                    <textarea class="textarea-field" id="referenceAnswer" th:field="*{referenceAnswer}"
+                              placeholder="可填写给学生参考的回答方向"></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label for="keyPoints">关键点（可选）</label>
+                    <textarea class="textarea-field" id="keyPoints" th:field="*{keyPoints}"
+                              placeholder="示例：项目背景,职责,难点,结果"></textarea>
+                </div>
+
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="submit">保存题目</button>
+                    <a class="btn btn-secondary" th:href="@{/admin/questions}">返回题库列表</a>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

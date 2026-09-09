@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="jobPicker(fieldId, fieldName, fieldLabel, jobs, selectedJobId, required, emptyLabel)"
+     class="field-group">
+    <label th:for="${fieldId + '-search'}" th:text="${fieldLabel}">目标岗位</label>
+    <div class="job-search-picker" th:attr="data-required=${required}">
+        <input type="search"
+               class="input-field job-search-input"
+               th:id="${fieldId + '-search'}"
+               placeholder="先搜索岗位名、公司名或方向">
+        <div class="job-search-toolbar">
+            <span class="small-note job-search-feedback">先搜索岗位名、公司名或方向，再从结果里确认岗位。</span>
+            <button type="button" class="job-search-clear">清空搜索</button>
+        </div>
+        <div class="small-note job-search-selected" aria-live="polite">当前还没有选择目标岗位。</div>
+        <div class="job-search-results" hidden></div>
+        <details class="job-search-manual">
+            <summary>没有搜到？从完整岗位列表里手动选择</summary>
+            <select class="select-field job-search-select"
+                    th:id="${fieldId}"
+                    th:name="${fieldName}"
+                    th:required="${required}">
+                <option value=""
+                        th:text="${emptyLabel != null ? emptyLabel : (required ? '请选择目标岗位' : '未指定')}">请选择目标岗位</option>
+                <option th:each="job : ${jobs}"
+                        th:value="${job.id}"
+                        th:selected="${selectedJobId != null and selectedJobId == job.id}"
+                        th:text="${job.displayTitle + ' / ' + (job.companyName != null and !#strings.isEmpty(job.companyName) ? job.companyName : '未知公司') + ' / ' + (job.jobDirection != null and !#strings.isEmpty(job.jobDirection) ? job.jobDirection : '-')}"
+                        th:attr="data-search-text=${job.displayTitle
+                            + ' '
+                            + (job.jobName != null ? job.jobName : '')
+                            + ' '
+                            + (job.companyName != null ? job.companyName : '')
+                            + ' '
+                            + (job.jobDirection != null ? job.jobDirection : '')
+                            + ' '
+                            + (job.sourceJobId != null ? job.sourceJobId : '')}">
+                    Java 后端 / 某公司 / 后端开发
+                </option>
+            </select>
+        </details>
+    </div>
+</div>
+</body>
+</html>

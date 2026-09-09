@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 我的记录</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='history')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="section-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">My Records</div>
+                    <h1 class="page-title">我的记录</h1>
+                    <p class="page-description">
+                        这里汇总了你在简历诊断和模拟面试中的历史结果，便于持续复盘和改进。
+                        当前版本先通过页面组织体现“登录后使用”逻辑，后续会接入真实权限。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/resume-review/history}">简历诊断记录</a>
+                    <a class="btn btn-primary" th:href="@{/interview/history}">模拟面试记录</a>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <article class="stat-card">
+                    <div class="stat-label">简历诊断次数</div>
+                    <div class="stat-value" th:text="${resumeReviewCount}">0</div>
+                    <div class="stat-footnote">用于跟踪简历问题变化和优化效果。</div>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-label">模拟面试次数</div>
+                    <div class="stat-value" th:text="${interviewSessionCount}">0</div>
+                    <div class="stat-footnote">按轮次记录面试表现，便于针对性训练。</div>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-label">已录入画像数</div>
+                    <div class="stat-value" th:text="${profileCount}">0</div>
+                    <div class="stat-footnote">画像越完整，匹配和诊断建议越准确。</div>
+                </article>
+                <article class="stat-card">
+                    <div class="stat-label">岗位数据量</div>
+                    <div class="stat-value" th:text="${jobCount}">0</div>
+                    <div class="stat-footnote">岗位数据支撑推荐、诊断和模拟问答方向。</div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <div class="history-links">
+                <article class="highlight-card glow-card history-card">
+                    <div class="section-pill">Resume Review</div>
+                    <h2 class="card-title">简历诊断历史</h2>
+                    <p class="card-description">
+                        回看每次简历诊断的评分、问题总结和优化建议，持续优化岗位相关表达。
+                    </p>
+                    <div class="actions-row spacer-top">
+                        <a class="btn btn-primary" th:href="@{/resume-review/history}">查看简历诊断历史</a>
+                        <a class="btn btn-secondary" th:href="@{/resume-review}">继续新建诊断</a>
+                    </div>
+                </article>
+
+                <article class="highlight-card glow-card history-card">
+                    <div class="section-pill">Interview Replay</div>
+                    <h2 class="card-title">模拟面试历史</h2>
+                    <p class="card-description">
+                        回看每轮模拟面试中的题目、回答、评分和建议，针对薄弱环节继续强化训练。
+                    </p>
+                    <div class="actions-row spacer-top">
+                        <a class="btn btn-primary" th:href="@{/interview/history}">查看面试历史</a>
+                        <a class="btn btn-secondary" th:href="@{/interview}">开始新一轮面试</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

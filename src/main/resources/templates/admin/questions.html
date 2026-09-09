@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 面试题库管理</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='admin-questions')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="section-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Question Bank</div>
+                    <h1 class="page-title">面试题库管理</h1>
+                    <p class="page-description">
+                        题目默认以中文化后的展示标题、难度、标签和考察点呈现。英文原题仍保留在原文区，方便管理员回看来源。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/admin}">返回管理首页</a>
+                    <a class="btn btn-primary" th:href="@{/admin/questions/new}">新增题目</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-card spacer-top">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>中文题目</th>
+                    <th>标签 / 难度 / 方向</th>
+                    <th>考察点</th>
+                    <th>整理状态</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(questions)}">
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <h2 class="empty-title">暂无题目</h2>
+                            <p class="empty-text">同步 GitHub 公开题库或手工新增后，这里会显示整理后的中文题目列表。</p>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:each="question : ${questions}">
+                    <td th:text="${question.id}">1</td>
+                    <td>
+                        <div class="content-block">
+                            <strong th:text="${question.displayTitle}">进程和线程有什么区别？</strong>
+                            <span class="small-note"
+                                  th:text="${question.displaySummary != null and !#strings.isEmpty(question.displaySummary) ? question.displaySummary : '暂无摘要'}">
+                                默认中文摘要
+                            </span>
+                            <details>
+                                <summary class="small-note">查看原题</summary>
+                                <div class="content-block spacer-top">
+                                    <span class="small-note" th:text="${question.rawTitle}">What is the difference between process and thread?</span>
+                                    <pre class="preformatted"
+                                         th:if="${question.rawContent != null and !#strings.isEmpty(question.rawContent)}"
+                                         th:text="${question.rawContent}">Raw content</pre>
+                                </div>
+                            </details>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="content-block">
+                            <div class="inline-list">
+                                <span th:each="tag : ${question.displayTagList}" th:text="${tag}">并发基础</span>
+                                <span th:if="${#lists.isEmpty(question.displayTagList)}">未补标签</span>
+                            </div>
+                            <span class="small-note"
+                                  th:text="${question.displayDifficulty + ' · ' + question.jobDirection + ' · ' + question.displayCategory}">
+                                中等 · Java后端 · 原理题
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="content-block">
+                            <ul class="bullet-list compact-list">
+                                <li th:each="item : ${question.keyPointItemList}" th:text="${item}">并发基础</li>
+                                <li th:if="${#lists.isEmpty(question.keyPointItemList)}">暂无结构化考察点</li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="content-block">
+                            <span class="status-badge"
+                                  th:classappend="${question.organized ? ' status-gemini' : ' status-fallback'}"
+                                  th:text="${question.normalizedStatus}">已中文化 / 已补标签</span>
+                            <span class="small-note"
+                                  th:text="${'来源语言：' + question.sourceLanguage + ' · 展示语言：' + question.displayLanguage}">
+                                来源语言：英文 · 展示语言：中文
+                            </span>
+                            <a class="resource-link"
+                               th:if="${question.sourceUrl != null and !#strings.isEmpty(question.sourceUrl)}"
+                               th:href="${question.sourceUrl}" target="_blank" rel="noopener noreferrer">查看来源链接</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <a class="btn btn-secondary" th:href="@{/admin/questions/edit/{id}(id=${question.id})}">编辑</a>
+                            <a class="btn btn-danger" th:href="@{/admin/questions/delete/{id}(id=${question.id})}"
+                               onclick="return confirm('确认删除这道题目吗？');">删除</a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
+</body>
+</html>

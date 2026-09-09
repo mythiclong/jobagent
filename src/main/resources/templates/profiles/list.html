@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 用户画像</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='profiles')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="section-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">User Profiles</div>
+                    <h1 class="page-title">用户画像</h1>
+                    <p class="page-description">
+                        这里是“求职档案”子模块。用结构化方式记录学生基础信息、目标方向、技能和项目经历，作为匹配、诊断和增强的统一输入。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/career-profile}">返回求职档案</a>
+                    <a class="btn btn-primary" th:href="@{/profiles/new}">新增画像</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-card spacer-top">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>姓名</th>
+                    <th>年级</th>
+                    <th>专业</th>
+                    <th>目标方向</th>
+                    <th>技能基础</th>
+                    <th>项目经历</th>
+                    <th>期望城市</th>
+                    <th>职业目标</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(profiles)}">
+                    <td colspan="10">
+                        <div class="empty-state">
+                            <h2 class="empty-title">还没有用户画像</h2>
+                            <p class="empty-text">建议先录入 1 到 3 个示例学生画像，方便后续演示岗位匹配、简历诊断和模拟面试。</p>
+                            <div class="actions-row spacer-top">
+                                <a class="btn btn-primary" th:href="@{/profiles/new}">立即新增画像</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:each="profile : ${profiles}">
+                    <td th:text="${profile.id}">1</td>
+                    <td><strong th:text="${profile.studentName}">张三</strong></td>
+                    <td th:text="${profile.grade}">大三</td>
+                    <td th:text="${profile.major}">软件工程</td>
+                    <td th:text="${profile.targetDirection}">后端开发</td>
+                    <td th:text="${profile.skills}">Java、MySQL、Spring Boot</td>
+                    <td th:text="${profile.projectExperience}">课程管理系统</td>
+                    <td th:text="${profile.expectedCity}">广州</td>
+                    <td th:text="${profile.careerGoal}">先拿到后端实习，再准备校招</td>
+                    <td>
+                        <div class="table-actions">
+                            <a class="btn btn-secondary" th:href="@{/profiles/edit/{id}(id=${profile.id})}">编辑</a>
+                            <a class="btn btn-danger"
+                               th:href="@{/profiles/delete/{id}(id=${profile.id})}"
+                               onclick="return confirm('确定要删除这条用户画像吗？');">删除</a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 无权限访问</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='forbidden')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="empty-state glow-card">
+            <h1 class="page-title">当前页面暂时无法访问</h1>
+            <p class="empty-text">这个入口不属于你当前账号的可访问范围。可以返回首页，或者回到自己的工作区继续推进求职准备。</p>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-secondary" th:href="@{/}">返回首页</a>
+                <a class="btn btn-primary" th:if="${viewer.admin}" th:href="@{/admin}">进入管理后台</a>
+                <a class="btn btn-primary" th:if="${!viewer.admin}" th:href="@{/career-profile}">查看求职档案</a>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

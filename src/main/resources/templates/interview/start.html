@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 模拟面试</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='interview')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <div class="page-header">
+            <div class="page-header-copy">
+                <div class="eyebrow">Interview Simulation</div>
+                <h1 class="page-title">模拟面试</h1>
+                <p class="page-description">选择求职档案和目标岗位后，就可以开始一轮围绕岗位方向的模拟问答训练。</p>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-secondary" th:href="@{/history-center}">我的记录</a>
+                <a class="btn btn-primary" th:href="@{/interview/history}">面试历史</a>
+            </div>
+        </div>
+
+        <div class="content-block spacer-top" th:if="${source != null}">
+            <strong>当前入口</strong>
+            <span th:text="${source == 'match' ? '已从岗位匹配带入目标岗位，可以直接开始面试训练。' : ((source == 'strength-plan' or source == 'learning-path') ? '已从补强方案带入目标岗位，训练后别忘了回看自己的答题表现。' : '你可以直接开始本次面试训练。')}">
+                已从岗位匹配带入目标岗位，可以直接开始面试训练。
+            </span>
+        </div>
+
+        <div th:if="${#lists.isEmpty(profiles) or #lists.isEmpty(jobs)}" class="empty-state">
+            <h2 class="empty-title">暂时还不能开始模拟面试</h2>
+            <p class="empty-text">请先完善求职档案，再回来开启一轮针对目标岗位的面试训练。</p>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-primary" th:href="@{/career-profile}">去完善求职档案</a>
+                <a class="btn btn-secondary" th:href="@{/match}">先看岗位匹配</a>
+            </div>
+        </div>
+
+        <section th:if="${not #lists.isEmpty(profiles) and not #lists.isEmpty(jobs)}" class="form-split">
+            <article class="form-card glow-card">
+                <form th:action="@{/interview/start}" method="post" class="field-grid">
+                    <div class="field-group">
+                        <label for="userProfileId">选择求职档案</label>
+                        <select class="select-field" id="userProfileId" name="userProfileId" required>
+                            <option value="">请选择求职档案</option>
+                            <option th:each="profile : ${profiles}"
+                                    th:value="${profile.id}"
+                                    th:selected="${selectedProfileId != null and selectedProfileId == profile.id}"
+                                    th:text="${profile.studentName + ' - ' + profile.grade + ' - ' + profile.targetDirection}">
+                                张三 - 大三 - 后端开发
+                            </option>
+                        </select>
+                    </div>
+
+                    <div th:replace="~{fragments/job-picker :: jobPicker('jobPostId', 'jobPostId', '选择目标岗位', ${jobs}, ${selectedJobId}, true, '请选择目标岗位')}"></div>
+
+                    <div class="actions-row">
+                        <button class="btn btn-primary" type="submit">开始面试</button>
+                        <a class="btn btn-secondary" th:href="@{/match}">先看岗位匹配</a>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="info-card helper-card">
+                <div class="section-pill">训练提示</div>
+                <ul class="bullet-list spacer-top">
+                    <li class="bullet-item">
+                        <strong>围绕目标岗位作答</strong>
+                        <span>尽量把回答和岗位方向、项目经历、技能准备联系起来。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>回答越具体越好</strong>
+                        <span>如果能讲清楚你做过什么、怎么做、结果如何，效果会更好。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>训练后及时复盘</strong>
+                        <span>每次训练结束后都可以回到我的记录查看表现和下一步建议。</span>
+                    </li>
+                </ul>
+            </aside>
+        </section>
+    </div>
+</main>
+<script th:src="@{/js/job-picker.js}"></script>
+</body>
+</html>

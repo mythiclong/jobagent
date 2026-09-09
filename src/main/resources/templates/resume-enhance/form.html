@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 简历优化</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='resume-optimize')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="form-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Resume Optimize</div>
+                    <h1 class="page-title">简历优化</h1>
+                    <p class="page-description">在这里上传或粘贴简历，先完成解析预览，再继续做诊断、模块优化和整份简历修改。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize/history}">优化历史</a>
+                    <a class="btn btn-secondary" th:href="@{/career-profile}">返回求职档案</a>
+                </div>
+            </div>
+
+            <div class="content-block spacer-top" th:if="${source != null}">
+                <strong>当前入口</strong>
+                <span th:text="${source == 'match' or source == 'match-record' ? '已从岗位匹配带入目标岗位，建议先补齐简历内容，再继续做补强和面试训练。' : ((source == 'strength-plan' or source == 'learning-path') ? '已从补强方案带入目标岗位，完善简历后会更方便继续投递和面试。' : '你可以直接开始本次简历优化。')}">
+                    已从岗位匹配带入目标岗位，建议先补齐简历内容，再继续做补强和面试训练。
+                </span>
+            </div>
+
+            <form class="field-grid spacer-top"
+                  th:action="@{/resume-optimize/parse}"
+                  method="post"
+                  enctype="multipart/form-data">
+                <div class="field-group">
+                    <label for="userProfileId">求职档案</label>
+                    <select id="userProfileId" name="userProfileId" class="select-field">
+                        <option value="">未选择档案</option>
+                        <option th:each="profile : ${profiles}" th:value="${profile.id}"
+                                th:selected="${selectedProfileId != null and selectedProfileId == profile.id}"
+                                th:text="${profile.studentName + ' / ' + profile.targetDirection}">
+                            张同学 / 后端开发
+                        </option>
+                    </select>
+                </div>
+                <div th:replace="~{fragments/job-picker :: jobPicker('jobPostId', 'jobPostId', '目标岗位', ${jobs}, ${selectedJobId}, true, '请选择目标岗位')}"></div>
+                <div class="field-group">
+                    <label for="resumePdf">上传 PDF</label>
+                    <input id="resumePdf" name="resumePdf" type="file" class="input-field" accept=".pdf">
+                </div>
+                <div class="field-group">
+                    <label for="resumeText">或直接粘贴简历文本</label>
+                    <textarea id="resumeText" name="resumeText" class="textarea-field" rows="12"
+                              placeholder="支持直接粘贴完整简历内容"></textarea>
+                </div>
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="submit">解析并进入优化流程</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+<script th:src="@{/js/job-picker.js}"></script>
+</body>
+</html>

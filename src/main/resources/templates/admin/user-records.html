@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 用户记录</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='admin-records')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="section-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Admin Records</div>
+                    <h1 class="page-title">用户记录汇总</h1>
+                    <p class="page-description">管理员可在此查看用户训练数据总览与最近记录。</p>
+                </div>
+            </div>
+
+            <div class="stats-grid spacer-top">
+                <article class="stat-card"><div class="stat-label">岗位总数</div><div class="stat-value" th:text="${jobCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">画像总数</div><div class="stat-value" th:text="${profileCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">匹配记录</div><div class="stat-value" th:text="${matchCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">简历诊断</div><div class="stat-value" th:text="${resumeReviewCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">简历增强</div><div class="stat-value" th:text="${resumeEnhanceCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">面试记录</div><div class="stat-value" th:text="${interviewRecordCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">学习路径建议</div><div class="stat-value" th:text="${learningPathCount}">0</div></article>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <div class="history-links">
+                <article class="highlight-card">
+                    <div class="section-pill">岗位匹配记录</div>
+                    <div class="session-stack spacer-top" th:if="${not #lists.isEmpty(matchRecords)}">
+                        <div class="content-block" th:each="record : ${matchRecords}">
+                            <strong th:text="${(userNameMap[record.userProfileId] != null ? userNameMap[record.userProfileId] : '未知用户')
+                                + ' -> ' + (jobNameMap[record.jobPostId] != null ? jobNameMap[record.jobPostId] : '未知岗位')}">
+                                张同学 -> Java后端实习生
+                            </strong>
+                            <span th:text="${'分数：' + record.matchScore}">分数：80</span>
+                        </div>
+                    </div>
+                    <div class="empty-state spacer-top" th:if="${#lists.isEmpty(matchRecords)}"><p class="empty-text">暂无记录</p></div>
+                </article>
+
+                <article class="highlight-card">
+                    <div class="section-pill">简历诊断记录</div>
+                    <div class="session-stack spacer-top" th:if="${not #lists.isEmpty(resumeReviews)}">
+                        <div class="content-block" th:each="review : ${resumeReviews}">
+                            <strong th:text="${(userNameMap[review.userProfileId] != null ? userNameMap[review.userProfileId] : '未知用户')
+                                + ' -> ' + (jobNameMap[review.jobPostId] != null ? jobNameMap[review.jobPostId] : '未知岗位')}">
+                                张同学 -> Java后端实习生
+                            </strong>
+                            <span th:text="${'评分：' + review.reviewScore}">评分：75</span>
+                        </div>
+                    </div>
+                    <div class="empty-state spacer-top" th:if="${#lists.isEmpty(resumeReviews)}"><p class="empty-text">暂无记录</p></div>
+                </article>
+
+                <article class="highlight-card">
+                    <div class="section-pill">简历增强记录</div>
+                    <div class="session-stack spacer-top" th:if="${not #lists.isEmpty(resumeEnhanceRecords)}">
+                        <div class="content-block" th:each="item : ${resumeEnhanceRecords}">
+                            <strong th:text="${(userNameMap[item.userProfileId] != null ? userNameMap[item.userProfileId] : '未知用户')
+                                + ' -> ' + (jobNameMap[item.jobPostId] != null ? jobNameMap[item.jobPostId] : '未知岗位')}">
+                                张同学 -> Java后端实习生
+                            </strong>
+                            <span th:text="${'评分：' + item.reviewScore + ' / 输入：' + item.inputType}">评分：80 / 输入：TEXT</span>
+                            <a class="small-note" th:href="@{/resume-enhance/{id}(id=${item.id})}">查看详情</a>
+                        </div>
+                    </div>
+                    <div class="empty-state spacer-top" th:if="${#lists.isEmpty(resumeEnhanceRecords)}"><p class="empty-text">暂无记录</p></div>
+                </article>
+
+                <article class="highlight-card">
+                    <div class="section-pill">模拟面试 Session</div>
+                    <div class="session-stack spacer-top" th:if="${not #lists.isEmpty(interviewSessions)}">
+                        <div class="content-block" th:each="interviewSession : ${interviewSessions}">
+                            <strong th:text="${interviewSession.sessionId}">session-001</strong>
+                            <span th:text="${(userNameMap[interviewSession.userProfileId] != null ? userNameMap[interviewSession.userProfileId] : '未知用户')
+                                + ' / ' + (jobNameMap[interviewSession.jobPostId] != null ? jobNameMap[interviewSession.jobPostId] : '未知岗位')}">
+                                张同学 / Java后端实习生
+                            </span>
+                            <span th:text="${'总评：' + interviewSession.totalScore + '，题目数：' + interviewSession.questionCount}">总评：80，题目数：4</span>
+                        </div>
+                    </div>
+                    <div class="empty-state spacer-top" th:if="${#lists.isEmpty(interviewSessions)}"><p class="empty-text">暂无记录</p></div>
+                </article>
+
+                <article class="highlight-card">
+                    <div class="section-pill">学习路径建议</div>
+                    <div class="session-stack spacer-top" th:if="${not #lists.isEmpty(learningPathRecords)}">
+                        <div class="content-block" th:each="record : ${learningPathRecords}">
+                            <strong th:text="${(userNameMap[record.userProfileId] != null ? userNameMap[record.userProfileId] : '未知用户')
+                                + ' -> ' + (jobNameMap[record.targetJobId] != null ? jobNameMap[record.targetJobId] : '未知岗位')}">
+                                张同学 -> Java后端实习生
+                            </strong>
+                            <span th:text="${record.targetDirection}">后端开发</span>
+                        </div>
+                    </div>
+                    <div class="empty-state spacer-top" th:if="${#lists.isEmpty(learningPathRecords)}"><p class="empty-text">暂无记录</p></div>
+                </article>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

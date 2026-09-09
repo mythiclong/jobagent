@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 简历诊断结果</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='resume')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Resume Review Result</div>
+                    <h1 class="page-title">简历诊断结果</h1>
+                    <p class="page-description">这里会帮你快速看清当前简历的整体状态、主要问题和下一步该优先处理的内容。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/resume-review/history}">查看历史记录</a>
+                    <a class="btn btn-secondary" th:href="@{/learning-path(userProfileId=${userProfile != null ? userProfile.id : null},targetJobId=${jobPost != null ? jobPost.id : null},source='resume-review')}">生成补强方案</a>
+                    <a class="btn btn-secondary" th:href="@{/resume-enhance(profileId=${userProfile != null ? userProfile.id : null},jobId=${jobPost != null ? jobPost.id : null},source='resume-review')}">去简历优化</a>
+                    <a class="btn btn-primary" th:href="@{/resume-review}">继续诊断</a>
+                </div>
+            </div>
+
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <div class="score-strip">总体评分 <span th:text="${review.reviewScore}">78</span></div>
+                    <span class="small-note">分数越高，说明当前简历与目标岗位越贴近。</span>
+                </div>
+                <div class="content-block">
+                    <strong>整体评价</strong>
+                    <span th:text="${review.summary}">简历有基础，但还需要补充岗位关键词。</span>
+                </div>
+                <div class="content-block">
+                    <strong>问题总结</strong>
+                    <span th:text="${review.problems}">项目描述偏少，缺少量化表达。</span>
+                </div>
+                <div class="content-block">
+                    <strong>缺失关键词</strong>
+                    <span th:text="${review.missingKeywords}">Spring Boot, MySQL</span>
+                </div>
+                <div class="content-block">
+                    <strong>优化建议</strong>
+                    <span th:text="${review.suggestions}">补齐关键技能并增强项目成果表达。</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="info-card spacer-top" th:if="${userProfile != null}">
+            <div class="section-pill">继续完善档案</div>
+            <div class="content-block spacer-top">
+                <strong>档案信息会一起影响后续结果</strong>
+                <span>如果你的目标方向、技能或项目经历有更新，建议先回到求职档案补全后再继续准备。</span>
+            </div>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-secondary" th:href="@{/profiles/edit/{id}(id=${userProfile.id})}">完善档案</a>
+                <a class="btn btn-primary" th:href="@{/career-profile(profileId=${userProfile.id},jobId=${jobPost != null ? jobPost.id : null})}">返回求职档案</a>
+            </div>
+        </section>
+
+        <section class="split-summary spacer-top">
+            <article class="info-card">
+                <div class="section-pill">诊断对象</div>
+                <div class="meta-grid spacer-top">
+                    <div class="meta-item">
+                        <div class="meta-label">求职档案</div>
+                        <div class="meta-value"
+                             th:text="${userProfile != null ? userProfile.studentName + ' / ' + userProfile.grade + ' / ' + userProfile.targetDirection : '档案信息不可用'}">
+                            张同学 / 大三 / 后端开发
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">目标岗位</div>
+                        <div class="meta-value"
+                             th:text="${jobPost != null ? jobPost.jobName + ' / ' + jobPost.jobDirection : '岗位信息不可用'}">
+                            Java后端实习生 / 后端开发
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">岗位技能要求</div>
+                        <div class="meta-value" th:text="${jobPost != null ? jobPost.jobRequirements : '-'}">Java, Spring Boot, MySQL</div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="info-card">
+                <div class="section-pill">建议动作</div>
+                <ul class="bullet-list spacer-top">
+                    <li class="bullet-item"><strong>补齐关键词</strong><span>把关键技能自然写进项目描述和技能清单里。</span></li>
+                    <li class="bullet-item"><strong>增加量化结果</strong><span>尽量写出负责内容、完成结果和具体成果。</span></li>
+                    <li class="bullet-item"><strong>继续联动准备</strong><span>下一步可以去简历优化、补强方案或模拟面试继续推进。</span></li>
+                </ul>
+            </article>
+        </section>
+
+        <section class="info-card spacer-top">
+            <div class="section-pill">简历原文</div>
+            <pre class="preformatted spacer-top" th:text="${review.resumeText}">这里显示简历文本。</pre>
+        </section>
+    </div>
+</main>
+</body>
+</html>

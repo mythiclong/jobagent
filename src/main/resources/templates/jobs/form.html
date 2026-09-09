@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${jobPost.id == null} ? '职航Agent | 新增岗位' : '职航Agent | 编辑岗位'">职航Agent | 岗位表单</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='jobs')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <div class="page-header">
+            <div class="page-header-copy">
+                <div class="eyebrow">Job Editor</div>
+                <h1 class="page-title" th:text="${jobPost.id == null} ? '新增岗位' : '编辑岗位'">岗位表单</h1>
+                <p class="page-description">保持岗位描述清晰、简洁，便于后续规则匹配和诊断逻辑直接复用。</p>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-secondary" th:href="@{/jobs}">返回岗位列表</a>
+            </div>
+        </div>
+
+        <section class="form-split">
+            <article class="form-card glow-card">
+                <form th:action="@{/jobs}" th:object="${jobPost}" method="post" class="field-grid">
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="field-group">
+                        <label for="jobName">岗位名称</label>
+                        <input class="input-field" type="text" id="jobName" th:field="*{jobName}" required>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="jobDirection">岗位方向</label>
+                        <input class="input-field" type="text" id="jobDirection" th:field="*{jobDirection}" required
+                               placeholder="例如：后端开发 / 前端开发 / 产品经理">
+                    </div>
+
+                    <div class="field-group">
+                        <label for="jobRequirements">技能要求</label>
+                        <textarea class="textarea-field" id="jobRequirements" th:field="*{jobRequirements}"
+                                  placeholder="例如：熟悉 Java、Spring Boot、MySQL，有接口开发基础"></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="bonusPoints">加分项</label>
+                        <textarea class="textarea-field" id="bonusPoints" th:field="*{bonusPoints}"
+                                  placeholder="例如：有项目经验、了解 Linux、参与过比赛或实习"></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="suitableGrade">适合年级</label>
+                        <input class="input-field" type="text" id="suitableGrade" th:field="*{suitableGrade}"
+                               placeholder="例如：大二 / 大三 / 不限">
+                    </div>
+
+                    <div class="actions-row">
+                        <button class="btn btn-primary" type="submit">保存岗位</button>
+                        <a class="btn btn-secondary" th:href="@{/jobs}">取消并返回</a>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="info-card helper-card">
+                <div class="section-pill">填写建议</div>
+                <ul class="bullet-list spacer-top">
+                    <li class="bullet-item">
+                        <strong>岗位方向要统一</strong>
+                        <span>尽量使用“后端开发”“前端开发”“产品经理”这类稳定表述，方便匹配和题库筛选。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>要求尽量关键词化</strong>
+                        <span>写出 Java、MySQL、Spring Boot、原型设计等关键词，便于规则识别。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>加分项写成亮点</strong>
+                        <span>比如“有完整项目经历”“有实习经历”“熟悉部署流程”，更利于后续建议生成。</span>
+                    </li>
+                </ul>
+            </aside>
+        </section>
+    </div>
+</main>
+</body>
+</html>

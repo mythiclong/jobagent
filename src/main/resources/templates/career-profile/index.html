@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 求职档案</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='career-profile')}"></div>
+
+<main class="page-shell">
+    <div class="page-container center-workbench">
+        <section class="form-card glow-card">
+            <div class="page-header compact-page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Profile Center</div>
+                    <h1 class="page-title compact-title">求职档案</h1>
+                    <p class="page-description compact-description">这里是你的当前档案、简历回流、求职偏好、下一步动作和最近主线记录的统一中心。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/profiles/new}">新建档案</a>
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize}">去简历优化</a>
+                </div>
+            </div>
+
+            <div class="content-block" th:if="${centerView.syncNotice != null and !#strings.isEmpty(centerView.syncNotice)}">
+                <strong>同步结果</strong>
+                <span th:text="${centerView.syncNotice}">最近一次回流结果会显示在这里。</span>
+            </div>
+
+            <form class="field-grid spacer-top" th:action="@{/career-profile}" method="get" th:if="${not #lists.isEmpty(profiles)}">
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="profileId">当前档案</label>
+                        <select id="profileId" name="profileId" class="select-field" required>
+                            <option th:each="profile : ${profiles}"
+                                    th:value="${profile.id}"
+                                    th:selected="${selectedProfileId != null and selectedProfileId == profile.id}"
+                                    th:text="${profile.studentName + ' / ' + profile.grade + ' / ' + profile.targetDirection}">
+                                演示求职者 / 大三 / 后端开发
+                            </option>
+                        </select>
+                    </div>
+                    <div th:replace="~{fragments/job-picker :: jobPicker('jobId', 'jobId', '当前参考岗位', ${jobs}, ${selectedJobId}, false, '未指定')}"></div>
+                </div>
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="submit">切换当前视图</button>
+                    <a class="btn btn-secondary" th:if="${selectedProfile != null}" th:href="@{/profiles/edit/{id}(id=${selectedProfile.id})}">编辑完整档案</a>
+                </div>
+            </form>
+
+            <div class="empty-state spacer-top" th:if="${#lists.isEmpty(profiles)}">
+                <h2 class="empty-title">还没有当前档案</h2>
+                <p class="empty-text">如果你已经做过简历识别，可以直接从下面的回流区创建草稿档案；如果还没有，就先上传简历或新建档案。</p>
+            </div>
+        </section>
+
+        <section class="highlight-card glow-card center-hero">
+            <div class="center-hero-head">
+                <div>
+                    <div class="section-pill">当前档案总览</div>
+                    <h2 class="card-title hero-block-title" th:text="${centerView.overview.displayName}">演示求职者</h2>
+                    <p class="section-description" th:text="${centerView.overview.targetSnapshot}">后端开发 / 上海 / 6k-9k/月</p>
+                </div>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" th:if="${selectedProfile != null}" th:href="@{/profiles/edit/{id}(id=${selectedProfile.id})}">编辑完整档案</a>
+                    <a class="btn btn-secondary" th:if="${selectedProfile != null}" th:href="@{/profiles}">查看档案列表</a>
+                </div>
+            </div>
+
+            <div class="overview-chip-row">
+                <span class="meta-pill" th:text="${'目标岗位：' + centerView.overview.targetRole}">目标岗位：后端开发</span>
+                <span class="meta-pill" th:text="${'岗位方向：' + centerView.overview.targetDirection}">岗位方向：后端开发</span>
+                <span class="meta-pill" th:text="${'目标城市：' + centerView.overview.targetCity}">目标城市：上海</span>
+                <span class="meta-pill" th:text="${'薪资期望：' + centerView.overview.expectedSalary}">薪资期望：6k-9k/月</span>
+                <span class="meta-pill" th:text="${'求职阶段：' + centerView.overview.jobNature}">求职阶段：实习 / 校招</span>
+                <span class="meta-pill" th:text="${'更新时间：' + centerView.overview.updatedAtLabel}">更新时间：2026-03-25 10:30</span>
+            </div>
+        </section>
+
+        <section class="split-summary">
+            <article class="section-card">
+                <div class="section-pill">档案完整度</div>
+                <div class="progress-head">
+                    <div>
+                        <h2 class="card-title" th:text="${centerView.completeness.completionLabel}">主线输入基本齐备</h2>
+                        <p class="section-description" th:text="${centerView.completeness.prioritySuggestion}">优先补齐目标岗位、技能或项目经历。</p>
+                    </div>
+                    <div class="score-pill" th:text="${centerView.completeness.completionPercent + '%'}">78%</div>
+                </div>
+
+                <div class="progress-track spacer-top">
+                    <div class="progress-fill" th:style="'width:' + ${centerView.completeness.completionPercent} + '%'"></div>
+                </div>
+
+                <div class="tag-list spacer-top" th:if="${not #lists.isEmpty(centerView.completeness.missingItems)}">
+                    <span class="tag-chip tag-chip-warning" th:each="item : ${centerView.completeness.missingItems}" th:text="${item}">技能信息待补全</span>
+                </div>
+                <div class="tag-list spacer-top" th:if="${#lists.isEmpty(centerView.completeness.missingItems)}">
+                    <span class="tag-chip tag-chip-success">当前档案已具备进入主线的基础输入</span>
+                </div>
+
+                <div class="status-list spacer-top">
+                    <div class="status-row" th:each="dimension : ${centerView.completeness.dimensionStatuses}">
+                        <div>
+                            <strong th:text="${dimension.label}">基础信息</strong>
+                            <p th:text="${dimension.description}">姓名、年级、专业已具备</p>
+                        </div>
+                        <span class="status-dot" th:classappend="${dimension.complete} ? ' is-complete' : ' is-pending'" th:text="${dimension.complete} ? '已完成' : '待补全'">已完成</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="highlight-card glow-card next-step-card" th:if="${centerView.nextStepRecommendation != null}">
+                <div class="section-pill">推荐下一步</div>
+                <h2 class="card-title" th:text="${centerView.nextStepRecommendation.title}">开始岗位匹配</h2>
+                <p class="section-description" th:text="${centerView.nextStepRecommendation.description}">当前档案已经具备基本输入，建议先做岗位匹配。</p>
+                <div class="actions-row spacer-top">
+                    <a class="btn btn-primary" th:href="${centerView.nextStepRecommendation.href}" th:text="${centerView.nextStepRecommendation.buttonLabel}">开始岗位匹配</a>
+                </div>
+            </article>
+        </section>
+
+        <section class="section-card" id="resume-backflow">
+            <div class="resume-backflow-head">
+                <div>
+                    <div class="section-pill">最近简历识别 / 同步结果</div>
+                    <h2 class="card-title">简历识别回流区</h2>
+                    <p class="section-description">最近一次简历上传、识别和档案补全建议，都会优先回到这里。</p>
+                </div>
+                <a class="btn btn-secondary" th:href="@{/resume-optimize(profileId=${selectedProfileId},jobId=${selectedJobId},source='career-profile')}">去更新简历识别</a>
+            </div>
+
+            <div th:if="${centerView.resumeBackflow.available}">
+                <div class="meta-grid spacer-top">
+                    <div class="meta-item">
+                        <span class="meta-label">最近上传时间</span>
+                        <span class="meta-value" th:text="${centerView.resumeBackflow.uploadedAtLabel}">2026-03-25 09:10</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">识别来源</span>
+                        <span class="meta-value" th:text="${centerView.resumeBackflow.inputTypeLabel}">PDF 简历</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">目标岗位候选</span>
+                        <span class="meta-value" th:text="${centerView.resumeBackflow.targetRoleCandidate}">后端开发</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">职业目标候选</span>
+                        <span class="meta-value" th:text="${centerView.resumeBackflow.careerGoalCandidate}">近期以实习机会为主</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">目标城市候选</span>
+                        <span class="meta-value" th:text="${centerView.resumeBackflow.targetCityCandidate}">上海</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">同步状态</span>
+                        <span class="meta-value" th:text="${centerView.resumeBackflow.syncStatusText}">检测到 3 项可补全信息</span>
+                    </div>
+                </div>
+
+                <div class="selection-grid spacer-top">
+                    <article class="content-block">
+                        <strong>识别出的技能关键词摘要</strong>
+                        <span th:text="${centerView.resumeBackflow.skillSummary}">Java、Spring Boot、MySQL</span>
+                    </article>
+                    <article class="content-block">
+                        <strong>识别出的项目经历摘要</strong>
+                        <span th:text="${centerView.resumeBackflow.projectSummary}">课程管理系统 / 岗位分析平台</span>
+                    </article>
+                    <article class="content-block">
+                        <strong>岗位性质候选</strong>
+                        <span th:text="${centerView.resumeBackflow.acceptableJobNatureCandidate}">实习 / 校招</span>
+                    </article>
+                    <article class="content-block">
+                        <strong>目标行业候选</strong>
+                        <span th:text="${centerView.resumeBackflow.targetIndustryCandidate}">企业服务 / SaaS</span>
+                    </article>
+                </div>
+
+                <div class="table-card spacer-top" th:if="${not #lists.isEmpty(centerView.resumeBackflow.fieldSuggestions)}">
+                    <div class="table-scroll">
+                        <table class="data-table compact-data-table">
+                            <thead>
+                            <tr>
+                                <th>补全项</th>
+                                <th>当前档案</th>
+                                <th>识别候选</th>
+                                <th>建议</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="field : ${centerView.resumeBackflow.fieldSuggestions}" th:classappend="${field.recommended} ? 'is-highlight' : ''">
+                                <td th:text="${field.label}">目标岗位</td>
+                                <td th:text="${field.currentValue}">—</td>
+                                <td th:text="${field.recognizedValue}">后端开发</td>
+                                <td th:text="${field.suggestionAction}">建议补全</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <form class="actions-row spacer-top" th:if="${centerView.resumeBackflow.canApply}" th:action="@{/career-profile/fill-from-resume}" method="post">
+                    <input type="hidden" name="userProfileId" th:value="${selectedProfileId}">
+                    <input type="hidden" name="jobPostId" th:value="${selectedJobId}">
+                    <input type="hidden" name="resumeRecordId" th:value="${centerView.resumeBackflow.resumeRecordId}">
+                    <button class="btn btn-primary" type="submit" th:text="${centerView.resumeBackflow.applyButtonLabel}">一键补全当前档案</button>
+                    <a class="btn btn-secondary" th:if="${selectedProfile != null}" th:href="@{/profiles/edit/{id}(id=${selectedProfile.id})}">逐项确认档案</a>
+                </form>
+            </div>
+
+            <div class="empty-state spacer-top" th:if="${not centerView.resumeBackflow.available}">
+                <h3 class="empty-title">还没有最近简历识别结果</h3>
+                <p class="empty-text">上传简历后，技能、项目、目标岗位候选和补全建议会自动回到这里。</p>
+                <div class="actions-row">
+                    <a class="btn btn-primary" th:href="@{/resume-optimize(profileId=${selectedProfileId},jobId=${selectedJobId},source='career-profile')}">去上传简历</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <div class="section-pill">用户求职偏好</div>
+            <h2 class="card-title">偏好输入中心</h2>
+            <p class="section-description">岗位匹配、补强方案和模拟面试，都会从这里读取你的当前求职偏好。</p>
+
+            <form class="field-grid spacer-top" th:if="${selectedProfile != null}" th:action="@{/career-profile/preferences}" method="post">
+                <input type="hidden" name="profileId" th:value="${selectedProfile.id}">
+                <input type="hidden" name="jobId" th:value="${selectedJobId}">
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="targetRole">目标岗位</label>
+                        <input class="input-field" id="targetRole" name="targetRole" type="text" th:value="${selectedProfile.targetRole}" placeholder="例如：Java 后端开发 / 产品经理">
+                    </div>
+                    <div class="field-group">
+                        <label for="targetDirection">目标岗位方向</label>
+                        <input class="input-field" id="targetDirection" name="targetDirection" type="text" th:value="${selectedProfile.targetDirection}" placeholder="例如：后端开发 / 前端开发">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="targetCity">目标城市</label>
+                        <input class="input-field" id="targetCity" name="targetCity" type="text" th:value="${selectedProfile.targetCity}" placeholder="例如：上海">
+                    </div>
+                    <div class="field-group">
+                        <label for="acceptableCities">接受城市范围</label>
+                        <input class="input-field" id="acceptableCities" name="acceptableCities" type="text" th:value="${selectedProfile.acceptableCities}" placeholder="例如：上海、杭州、苏州">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="expectedSalary">期望薪资</label>
+                        <input class="input-field" id="expectedSalary" name="expectedSalary" type="text" th:value="${selectedProfile.expectedSalary}" placeholder="例如：6k-9k/月">
+                    </div>
+                    <div class="field-group">
+                        <label for="acceptableJobNature">接受的岗位性质</label>
+                        <input class="input-field" id="acceptableJobNature" name="acceptableJobNature" type="text" th:value="${selectedProfile.acceptableJobNature}" placeholder="例如：实习 / 校招 / 全职">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="targetIndustry">目标行业</label>
+                        <input class="input-field" id="targetIndustry" name="targetIndustry" type="text" th:value="${selectedProfile.targetIndustry}" placeholder="例如：企业服务 / SaaS">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label for="careerGoal">职业目标描述</label>
+                    <textarea class="textarea-field" id="careerGoal" name="careerGoal" placeholder="用一句话写清楚你当前最想冲刺的方向、阶段和投递目标" th:text="${selectedProfile.careerGoal}"></textarea>
+                </div>
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="submit">保存当前偏好</button>
+                    <a class="btn btn-secondary" th:href="@{/profiles/edit/{id}(id=${selectedProfile.id})}">编辑完整档案</a>
+                </div>
+            </form>
+
+            <div class="empty-state spacer-top" th:if="${selectedProfile == null}">
+                <h3 class="empty-title">先建立当前档案，再沉淀求职偏好</h3>
+                <p class="empty-text">目标岗位、目标城市、薪资期望和职业目标，都会绑定到当前档案中统一维护。</p>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <div class="section-pill">其他入口</div>
+            <h2 class="card-title">继续推进主线</h2>
+            <div class="entry-grid spacer-top">
+                <a class="feature-card" th:each="action : ${centerView.secondaryActions}" th:href="${action.href}">
+                    <h3 class="feature-title" th:text="${action.label}">岗位匹配</h3>
+                    <p class="feature-description" th:text="${action.description}">读取当前档案做岗位匹配</p>
+                    <span class="feature-link">进入模块</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <div class="section-pill">最近主线摘要</div>
+            <h2 class="card-title">最近记录</h2>
+            <div class="selection-grid spacer-top">
+                <article class="result-card glow-card" th:each="item : ${centerView.recentSummaryItems}">
+                    <div class="meta-item">
+                        <span class="meta-label" th:text="${item.title}">最近一次岗位匹配</span>
+                        <span class="meta-value" th:text="${item.timeLabel}">2026-03-25 10:30</span>
+                    </div>
+                    <div class="content-block">
+                        <strong th:text="${item.primaryText}">推荐岗位数 12</strong>
+                        <span th:text="${item.secondaryText}">最高匹配分 86</span>
+                    </div>
+                    <div class="small-note" th:text="${item.tertiaryText}">可继续查看答题记录</div>
+                </article>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script th:src="@{/js/job-picker.js}"></script>
+</body>
+</html>

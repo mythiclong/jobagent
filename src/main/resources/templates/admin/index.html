@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 管理首页</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='admin-home')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Admin Hub</div>
+                    <h1 class="page-title">管理首页</h1>
+                    <p class="page-description">从这里进入管理员关键能力：岗位管理、面试题库管理、用户记录查看。</p>
+                </div>
+            </div>
+            <div class="stats-grid spacer-top">
+                <article class="stat-card"><div class="stat-label">岗位总数</div><div class="stat-value" th:text="${jobCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">画像总数</div><div class="stat-value" th:text="${profileCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">简历诊断次数</div><div class="stat-value" th:text="${resumeReviewCount}">0</div></article>
+                <article class="stat-card"><div class="stat-label">模拟面试次数</div><div class="stat-value" th:text="${interviewSessionCount}">0</div></article>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <div class="admin-tools-grid">
+                <a class="feature-card glow-card" th:href="@{/jobs}">
+                    <h3 class="feature-title">岗位管理</h3>
+                    <p class="feature-description">维护岗位名称、方向、要求、加分项和适合年级。</p>
+                </a>
+                <a class="feature-card glow-card" th:href="@{/admin/questions}">
+                    <h3 class="feature-title">面试题库管理</h3>
+                    <p class="feature-description">维护后端/前端/产品等方向题目，支撑模拟面试模块抽题。</p>
+                </a>
+                <a class="feature-card glow-card" th:href="@{/admin/user-records}">
+                    <h3 class="feature-title">用户记录查看</h3>
+                    <p class="feature-description">汇总查看匹配、简历诊断、模拟面试和学习路径建议记录。</p>
+                </a>
+                <a class="feature-card glow-card" th:href="@{/admin/ai-test}">
+                    <h3 class="feature-title">AI 服务测试</h3>
+                    <p class="feature-description">快速验证 Gemini API key、模型调用结果和 fallback 是否生效。</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <article class="highlight-card glow-card">
+                <div class="page-header">
+                    <div class="page-header-copy">
+                        <div class="eyebrow">Data Update Center</div>
+                        <h2 class="card-title">数据更新中心</h2>
+                        <p class="page-description">支持手动更新岗位、题库、学习资源，并记录更新时间、状态和新增数量。</p>
+                    </div>
+                    <div class="page-actions">
+                        <a class="btn btn-secondary" th:href="@{/admin/update-center}">进入完整更新中心</a>
+                    </div>
+                </div>
+
+                <div class="admin-tools-grid spacer-top">
+                    <form class="content-block" th:action="@{/admin/update-center/jobs}" method="post">
+                        <strong>更新岗位信息</strong>
+                        <span th:text="${lastJobUpdateLog != null && lastJobUpdateLog.createdAt != null ? '上次：' + #temporals.format(lastJobUpdateLog.createdAt, 'yyyy-MM-dd HH:mm:ss') : '上次：暂无'}">
+                            上次：暂无
+                        </span>
+                        <span th:text="${lastJobUpdateLog != null ? '新增：' + lastJobUpdateLog.addedCount + '，状态：' + lastJobUpdateLog.status : '新增：0，状态：N/A'}">
+                            新增：0，状态：N/A
+                        </span>
+                        <button class="btn btn-primary spacer-top" type="submit">立即更新岗位</button>
+                    </form>
+
+                    <form class="content-block" th:action="@{/admin/update-center/questions}" method="post">
+                        <strong>更新面试题库</strong>
+                        <span th:text="${lastQuestionUpdateLog != null && lastQuestionUpdateLog.createdAt != null ? '上次：' + #temporals.format(lastQuestionUpdateLog.createdAt, 'yyyy-MM-dd HH:mm:ss') : '上次：暂无'}">
+                            上次：暂无
+                        </span>
+                        <span th:text="${lastQuestionUpdateLog != null ? '新增：' + lastQuestionUpdateLog.addedCount + '，状态：' + lastQuestionUpdateLog.status : '新增：0，状态：N/A'}">
+                            新增：0，状态：N/A
+                        </span>
+                        <button class="btn btn-primary spacer-top" type="submit">立即更新题库</button>
+                    </form>
+
+                    <form class="content-block" th:action="@{/admin/update-center/resources}" method="post">
+                        <strong>更新学习资源</strong>
+                        <span th:text="${lastResourceUpdateLog != null && lastResourceUpdateLog.createdAt != null ? '上次：' + #temporals.format(lastResourceUpdateLog.createdAt, 'yyyy-MM-dd HH:mm:ss') : '上次：暂无'}">
+                            上次：暂无
+                        </span>
+                        <span th:text="${lastResourceUpdateLog != null ? '新增：' + lastResourceUpdateLog.addedCount + '，状态：' + lastResourceUpdateLog.status : '新增：0，状态：N/A'}">
+                            新增：0，状态：N/A
+                        </span>
+                        <button class="btn btn-primary spacer-top" type="submit">立即更新资源</button>
+                    </form>
+                </div>
+            </article>
+        </section>
+    </div>
+</main>
+</body>
+</html>

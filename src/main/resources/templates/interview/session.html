@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 模拟面试答题</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='interview')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Interview Session</div>
+                    <h1 class="page-title">模拟面试答题</h1>
+                    <p class="page-description">
+                        本轮题目会优先围绕目标岗位、核心技能和项目经历展开。建议按“背景 - 动作 - 结果”的结构作答，
+                        尽量讲清你做过什么、为什么这样做，以及最终产生了什么结果。
+                    </p>
+                </div>
+            </div>
+
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <strong>当前档案</strong>
+                    <span th:text="${userProfile.studentName + ' / ' + userProfile.grade + ' / ' + userProfile.targetDirection}">张同学 / 大三 / Java后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>目标岗位</strong>
+                    <span th:text="${jobPost.displayTitle + ' / ' + jobPost.jobDirection}">Java后端岗位 / Java后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>本轮题量</strong>
+                    <span th:text="${#lists.size(questions) + ' 题'}">4 题</span>
+                </div>
+                <div class="content-block">
+                    <strong>题库准备</strong>
+                    <span th:text="${'相关题 ' + relevantQuestionCount + ' / 新补题 ' + generatedQuestionCount}">相关题 8 / 新补题 2</span>
+                </div>
+            </div>
+
+            <div th:if="${questionSupplyNotice != null and !#strings.isEmpty(questionSupplyNotice)}"
+                 class="content-block fallback-alert spacer-top notice-strip">
+                <strong>本轮提示</strong>
+                <span th:text="${questionSupplyNotice}">已结合当前岗位自动补充相关题目，本轮优先为你整理更贴近岗位的问答。</span>
+            </div>
+        </section>
+
+        <section th:if="${#lists.isEmpty(questions)}" class="empty-state spacer-top">
+            <h2 class="empty-title">当前还没有可用于开面的题目</h2>
+            <p class="empty-text">你可以先返回重新选择岗位，或稍后再试。系统会优先使用当前题库中的核心题目，不会中断本轮流程。</p>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-secondary" th:href="@{/interview}">返回重新选择</a>
+            </div>
+        </section>
+
+        <form th:if="${not #lists.isEmpty(questions)}" th:action="@{/interview/submit}" method="post" class="result-stack spacer-top">
+            <input type="hidden" name="userProfileId" th:value="${userProfile.id}">
+            <input type="hidden" name="jobPostId" th:value="${jobPost.id}">
+            <input type="hidden" name="sessionId" th:value="${sessionId}">
+
+            <article class="question-card glow-card" th:each="question, stat : ${questions}">
+                <input type="hidden" name="questionIds" th:value="${question.id}">
+                <div class="type-pill" th:text="${question.displayCategory}">基础知识</div>
+                <h2 class="card-title spacer-top" th:text="${stat.count + '. ' + question.displayTitle}">1. 请做一个 1 分钟左右的自我介绍</h2>
+
+                <div class="inline-list spacer-top">
+                    <span th:each="tag : ${question.displayTagList}" th:text="${tag}">Java后端</span>
+                    <span th:if="${#lists.isEmpty(question.displayTagList)}">未补充标签</span>
+                </div>
+
+                <div class="summary-grid spacer-top">
+                    <div class="content-block">
+                        <strong>难度</strong>
+                        <span th:text="${question.displayDifficulty}">中等</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>考察点</strong>
+                        <span th:text="${question.keyPointSummary != null and !#strings.isEmpty(question.keyPointSummary) ? question.keyPointSummary : '表达结构与岗位理解'}">并发基础 / 资源隔离 / 调度理解</span>
+                    </div>
+                </div>
+
+                <div class="content-block spacer-top" th:if="${not #lists.isEmpty(question.scoringRubricItems)}">
+                    <strong>评分重点</strong>
+                    <div class="inline-list">
+                        <span th:each="item : ${question.scoringRubricItems}" th:text="${item}">回答结构清晰</span>
+                    </div>
+                </div>
+
+                <details class="content-block spacer-top"
+                         th:if="${question.rawTitle != null and !#strings.isEmpty(question.rawTitle) and question.rawTitle != question.displayTitle}">
+                    <summary class="small-note">查看原题</summary>
+                    <span th:text="${question.rawTitle}">What is the difference between process and thread?</span>
+                </details>
+
+                <div class="field-group spacer-top">
+                    <label th:for="${'answer-' + stat.index}">你的回答</label>
+                    <textarea class="textarea-field" th:id="${'answer-' + stat.index}" name="userAnswers" required
+                              placeholder="请结合岗位方向、项目经历、关键动作和结果来回答。"></textarea>
+                </div>
+            </article>
+
+            <div class="actions-row">
+                <button class="btn btn-primary" type="submit">提交回答并查看点评</button>
+                <a class="btn btn-secondary" th:href="@{/interview}">放弃本轮并返回</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

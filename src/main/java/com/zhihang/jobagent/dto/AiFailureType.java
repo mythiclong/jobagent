@@ -1,0 +1,14 @@
+package com.zhihang.jobagent.dto;
+
+public enum AiFailureType {
+    NONE,
+    API_KEY_MISSING,
+    CONNECTION_TIMEOUT,
+    DNS_FAILURE,
+    TLS_HANDSHAKE_FAILURE,
+    AUTH_401_403,
+    HTTP_NON_SUCCESS,
+    RESPONSE_EMPTY,
+    RESPONSE_PARSE_FAILED,
+    UNKNOWN_EXCEPTION
+}

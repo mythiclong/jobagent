@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 我的记录</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='history-center')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">History Center</div>
+                    <h1 class="page-title">我的记录</h1>
+                    <p class="page-description">
+                        在这里统一回看岗位匹配、补强方案、简历优化和模拟面试的最近结果，方便你随时继续下一步准备。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/career-profile}">求职档案</a>
+                    <a class="btn btn-secondary" th:href="@{/match}">岗位匹配</a>
+                    <a class="btn btn-secondary" th:href="@{/strength-plan/history}">补强方案历史</a>
+                    <a class="btn btn-primary" th:href="@{/resume-optimize/history}">简历优化历史</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="result-card glow-card spacer-top" th:if="${latestJourney != null}">
+            <h2 class="card-title">最近一次准备进展</h2>
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <strong>岗位匹配</strong>
+                    <span th:text="${latestJourney.matchRecord != null ? ('分数 ' + latestJourney.matchRecord.matchScore) : '暂无'}">分数 82</span>
+                </div>
+                <div class="content-block">
+                    <strong>补强方案</strong>
+                    <span th:text="${latestJourney.learningPathAdvice != null ? ('方案 #' + latestJourney.learningPathAdvice.id) : '暂无'}">方案 #1</span>
+                </div>
+                <div class="content-block">
+                    <strong>简历优化</strong>
+                    <span th:text="${latestJourney.resumeEnhanceRecord != null ? ('记录 #' + latestJourney.resumeEnhanceRecord.id) : '暂无'}">记录 #1</span>
+                </div>
+                <div class="content-block">
+                    <strong>模拟面试</strong>
+                    <span th:text="${latestJourney.interviewSession != null ? ('总评 ' + latestJourney.interviewSession.totalScore) : '暂无'}">总评 84</span>
+                </div>
+            </div>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-secondary"
+                   th:if="${latestJourney.learningPathAdvice != null}"
+                   th:href="@{/strength-plan/{id}(id=${latestJourney.learningPathAdvice.id})}">查看补强方案</a>
+                <form class="inline-form"
+                      th:if="${latestJourney.learningPathAdvice == null and latestJourney.userProfileId != null and latestJourney.jobPostId != null}"
+                      th:action="@{/strength-plan/generate}"
+                      method="post">
+                    <input type="hidden" name="userProfileId" th:value="${latestJourney.userProfileId}">
+                    <input type="hidden" name="targetJobId" th:value="${latestJourney.jobPostId}">
+                    <input type="hidden" name="source" value="history-center">
+                    <button type="submit" class="btn btn-secondary">生成补强方案</button>
+                </form>
+
+                <a class="btn btn-secondary"
+                   th:if="${latestJourney.resumeEnhanceRecord != null}"
+                   th:href="@{/resume-optimize/{id}(id=${latestJourney.resumeEnhanceRecord.id})}">查看简历优化</a>
+                <a class="btn btn-secondary"
+                   th:if="${latestJourney.resumeEnhanceRecord == null and latestJourney.userProfileId != null and latestJourney.jobPostId != null}"
+                   th:href="@{/resume-optimize(profileId=${latestJourney.userProfileId},jobId=${latestJourney.jobPostId},source='history-center')}">去做简历优化</a>
+
+                <a class="btn btn-primary"
+                   th:if="${latestJourney.userProfileId != null and latestJourney.jobPostId != null}"
+                   th:href="@{/interview(profileId=${latestJourney.userProfileId},jobId=${latestJourney.jobPostId},source='history-center')}">开始模拟面试</a>
+            </div>
+        </section>
+
+        <section class="selection-grid spacer-top">
+            <article class="result-card glow-card">
+                <h2 class="card-title">岗位匹配记录</h2>
+                <div class="content-block" th:if="${#lists.isEmpty(matchRecords)}">
+                    <span>暂无岗位匹配记录</span>
+                </div>
+                <div class="content-block" th:each="item : ${matchRecords}">
+                    <strong th:text="${jobNameMap[item.jobPostId] != null ? jobNameMap[item.jobPostId] : '岗位信息缺失'}">岗位名称</strong>
+                    <span th:text="${(userNameMap[item.userProfileId] != null ? userNameMap[item.userProfileId] : '用户信息缺失') + ' / 分数 ' + (item.matchScore != null ? item.matchScore : '-')}">张同学 / 分数 82</span>
+                    <span class="small-note" th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-15 20:00:00</span>
+                    <div class="actions-row">
+                        <a class="btn btn-secondary" th:href="@{/match/record/{id}(id=${item.id})}">查看详情</a>
+                        <form class="inline-form"
+                              th:if="${item.userProfileId != null and item.jobPostId != null}"
+                              th:action="@{/strength-plan/generate}"
+                              method="post">
+                            <input type="hidden" name="userProfileId" th:value="${item.userProfileId}">
+                            <input type="hidden" name="targetJobId" th:value="${item.jobPostId}">
+                            <input type="hidden" name="source" value="history-center">
+                            <button type="submit" class="btn btn-primary">生成补强方案</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">补强方案记录</h2>
+                <div class="content-block" th:if="${#lists.isEmpty(strengthPlanRecords)}">
+                    <span>暂无补强方案记录</span>
+                </div>
+                <div class="content-block" th:each="item : ${strengthPlanRecords}">
+                    <strong th:text="${jobNameMap[item.targetJobId] != null ? jobNameMap[item.targetJobId] : '岗位信息缺失'}">岗位名称</strong>
+                    <span th:text="${(userNameMap[item.userProfileId] != null ? userNameMap[item.userProfileId] : '用户信息缺失') + ' / 方案 #' + item.id}">张同学 / 方案 #1</span>
+                    <span class="small-note" th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-15 20:00:00</span>
+                    <span class="small-note" th:text="${strengthPlanRelatedMatchSummaryMap[item.id]}">匹配记录 #12 / 分数 83</span>
+                    <span class="small-note"
+                          th:if="${strengthPlanRelatedResumeIdMap[item.id] != null}"
+                          th:text="${'关联简历优化 #' + strengthPlanRelatedResumeIdMap[item.id]}">关联简历优化 #5</span>
+                    <div class="actions-row">
+                        <a class="btn btn-primary" th:href="@{/strength-plan/{id}(id=${item.id})}">查看详情</a>
+                        <a class="btn btn-secondary"
+                           th:if="${strengthPlanRelatedMatchIdMap[item.id] != null}"
+                           th:href="@{/match/record/{id}(id=${strengthPlanRelatedMatchIdMap[item.id]})}">查看关联匹配</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">简历优化记录</h2>
+                <div class="content-block" th:if="${#lists.isEmpty(resumeEnhanceRecords)}">
+                    <span>暂无简历优化记录</span>
+                </div>
+                <div class="content-block" th:each="item : ${resumeEnhanceRecords}">
+                    <strong th:text="${jobNameMap[item.jobPostId] != null ? jobNameMap[item.jobPostId] : '岗位信息缺失'}">岗位名称</strong>
+                    <span th:text="${(userNameMap[item.userProfileId] != null ? userNameMap[item.userProfileId] : '用户信息缺失') + ' / 记录 #' + item.id}">张同学 / 记录 #1</span>
+                    <span class="small-note" th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-15 20:00:00</span>
+                    <div class="actions-row">
+                        <a class="btn btn-primary" th:href="@{/resume-optimize/{id}(id=${item.id})}">查看详情</a>
+                        <a class="btn btn-secondary"
+                           th:if="${item.userProfileId != null and item.jobPostId != null}"
+                           th:href="@{/interview(profileId=${item.userProfileId},jobId=${item.jobPostId},source='history-center')}">开始模拟面试</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">模拟面试记录</h2>
+                <div class="content-block" th:if="${#lists.isEmpty(interviewSessions)}">
+                    <span>暂无模拟面试记录</span>
+                </div>
+                <div class="content-block" th:each="item : ${interviewSessions}">
+                    <strong th:text="${jobNameMap[item.jobPostId] != null ? jobNameMap[item.jobPostId] : '岗位信息缺失'}">岗位名称</strong>
+                    <span th:text="${(userNameMap[item.userProfileId] != null ? userNameMap[item.userProfileId] : '用户信息缺失') + ' / 总评 ' + (item.totalScore != null ? item.totalScore : '-')}">张同学 / 总评 84</span>
+                    <span class="small-note" th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-15 20:00:00</span>
+                    <div class="actions-row">
+                        <a class="btn btn-primary" th:href="@{/interview/history/{sessionId}(sessionId=${item.sessionId})}">查看详情</a>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 岗位匹配</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='match')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="section-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Job Matching</div>
+                    <h1 class="page-title">岗位匹配</h1>
+                    <p class="page-description">
+                        先选择一份求职档案，再让系统根据档案中的方向、技能、项目经历和目标岗位要求计算匹配结果。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/career-profile}">返回求职档案</a>
+                    <a class="btn btn-primary" th:href="@{/history-center}">我的记录</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-block spacer-top">
+            <div th:if="${#lists.isEmpty(profiles)}" class="empty-state">
+                <h2 class="empty-title">暂无求职档案</h2>
+                <p class="empty-text">请先创建求职档案，或先从简历优化中识别出一份待确认档案草稿。</p>
+                <div class="actions-row spacer-top">
+                    <a class="btn btn-primary" th:href="@{/career-profile}">去建立求职档案</a>
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize}">先上传简历</a>
+                </div>
+            </div>
+
+            <div th:if="${not #lists.isEmpty(profiles)}" class="selection-grid">
+                <article class="feature-card glow-card" th:each="profile : ${profiles}">
+                    <div class="section-pill" th:text="${'档案 #' + profile.id}">档案 #1</div>
+                    <h2 class="feature-title" th:text="${profile.studentName}">张同学</h2>
+                    <p class="feature-description"
+                       th:text="${profile.grade + ' / ' + profile.major + ' / ' + profile.targetDirection}">
+                        大三 / 软件工程 / 后端开发
+                    </p>
+                    <div class="content-block">
+                        <strong>技能</strong>
+                        <span th:text="${profile.skills != null and !#strings.isEmpty(profile.skills) ? profile.skills : '待补全'}">Java / Spring Boot</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>项目经历</strong>
+                        <span th:text="${profile.projectExperience != null and !#strings.isEmpty(profile.projectExperience) ? profile.projectExperience : '待补全'}">课程管理系统</span>
+                    </div>
+                    <div class="actions-row">
+                        <a class="btn btn-primary btn-full" th:href="@{/match/{id}(id=${profile.id})}">开始匹配</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

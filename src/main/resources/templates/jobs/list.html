@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 岗位管理</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='jobs')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card jobs-overview-card">
+            <div class="page-header jobs-page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Job Admin Workspace</div>
+                    <h1 class="page-title">岗位管理</h1>
+                    <p class="page-description">
+                        在这里集中处理岗位录入、校招 Excel 预览和确认导入。页面会把“预览批次”和“真实导入结果”明确分开，
+                        避免把尚未写库的预览误认为已经导入成功。
+                    </p>
+                </div>
+                <div class="page-actions jobs-action-cluster">
+                    <a class="btn btn-secondary" th:href="@{/admin}">返回管理首页</a>
+                    <button class="btn btn-secondary" type="button" id="jobExcelImportTrigger">Excel 导入岗位数据（生成预览）</button>
+                    <a class="btn btn-primary" th:href="@{/jobs/new}">新增岗位</a>
+                </div>
+            </div>
+
+            <div class="content-block" th:if="${notice != null and !#strings.isEmpty(notice)}">
+                <strong>页面提示</strong>
+                <span th:text="${notice}">操作已完成。</span>
+            </div>
+
+            <div class="content-block spacer-top">
+                <strong th:text="${jobImportStateTitle}">当前状态：未上传文件</strong>
+                <span th:text="${jobImportStateDescription}">当前还没有预览批次和导入记录。</span>
+            </div>
+
+            <form id="jobExcelImportForm"
+                  th:action="@{/jobs/import/preview}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="jobs-import-hidden-form">
+                <input id="jobExcelFileInput" type="file" name="excelFile" accept=".xlsx" hidden>
+            </form>
+        </section>
+
+        <section class="section-card spacer-top">
+            <div class="page-header jobs-section-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Excel 导入岗位数据</div>
+                    <h2 class="card-title">当前预览批次</h2>
+                    <p class="page-description">这里只展示当前解析完成但尚未确认导入的 Excel 预览结果。</p>
+                </div>
+                <div class="page-actions jobs-action-cluster" th:if="${jobExcelImportPreview != null}">
+                    <button class="btn btn-secondary" type="button" id="jobExcelReuploadTrigger">重新选择 Excel</button>
+                    <form th:action="@{/jobs/import/confirm}" method="post">
+                        <input type="hidden" name="previewToken" th:value="${jobExcelImportPreview.token}">
+                        <button class="btn btn-primary"
+                                type="submit"
+                                th:disabled="${!jobExcelImportPreview.canConfirm()}">
+                            确认补充导入
+                        </button>
+                    </form>
+                </div>
+                <div class="page-actions jobs-action-cluster" th:if="${jobExcelImportPreview == null}">
+                    <button class="btn btn-primary" type="button" id="jobExcelPrimaryTrigger">Excel 导入岗位数据（生成预览）</button>
+                </div>
+            </div>
+
+            <div th:if="${jobExcelImportPreview != null}">
+                <div class="content-block">
+                    <strong>当前状态：未执行导入</strong>
+                    <span>当前仅完成 Excel 预览，尚未执行导入。下方统计仅反映已导入成功的数据。</span>
+                </div>
+                <div class="jobs-summary-grid spacer-top">
+                    <div class="content-block">
+                        <strong>预览批次号</strong>
+                        <span th:text="${jobExcelImportPreview.importBatchNo}">JOBEXCEL-20260317183000-ABCD</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>预览文件名</strong>
+                        <span th:text="${jobExcelImportPreview.fileName}">school-jobs.xlsx</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>总行数</strong>
+                        <span th:text="${jobExcelImportPreview.totalRows}">0</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>可新增</strong>
+                        <span th:text="${jobExcelImportPreview.creatableCount}">0</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>可补充</strong>
+                        <span th:text="${jobExcelImportPreview.supplementableCount}">0</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>跳过 / 失败</strong>
+                        <span th:text="${jobExcelImportPreview.skippedCount + ' / ' + jobExcelImportPreview.failedCount}">0 / 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-block" th:if="${jobExcelImportPreview == null and jobImportPageState == 'idle'}">
+                <strong>还没有预览批次</strong>
+                <span>当前未上传 Excel 文件。请先选择文件生成预览，确认无误后再执行导入。</span>
+            </div>
+
+            <div class="content-block" th:if="${jobExcelImportPreview == null and jobImportPageState == 'imported'}">
+                <strong>当前没有待确认的预览批次</strong>
+                <span>最近一次预览已经完成导入或已被清空。现在页面展示的是已确认导入后的真实结果。</span>
+            </div>
+        </section>
+
+        <section class="split-summary spacer-top">
+            <article class="section-card">
+                <div class="page-header jobs-section-header">
+                    <div class="page-header-copy">
+                        <h2 class="card-title">已导入数据概览</h2>
+                        <p class="page-description">仅统计已确认导入的数据，不包含当前预览批次。</p>
+                    </div>
+                </div>
+                <div class="jobs-summary-grid spacer-top">
+                    <div class="content-block">
+                        <strong>岗位总数</strong>
+                        <span th:text="${jobCount}">0</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>Excel 来源岗位数</strong>
+                        <span th:text="${excelImportedJobCount}">0</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>最近一次确认导入文件</strong>
+                        <span th:text="${lastJobExcelImportLog != null and lastJobExcelImportLog.fileName != null ? lastJobExcelImportLog.fileName : '暂无'}">暂无</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>最近一次确认导入时间</strong>
+                        <span th:text="${lastJobExcelImportLog != null and lastJobExcelImportLog.createdAt != null ? #temporals.format(lastJobExcelImportLog.createdAt, 'yyyy-MM-dd HH:mm:ss') : '暂无'}">
+                            暂无
+                        </span>
+                    </div>
+                </div>
+                <span class="small-note spacer-top">仅统计已确认导入的数据，不包含当前预览批次。</span>
+            </article>
+
+            <article class="section-card">
+                <div class="page-header jobs-section-header">
+                    <div class="page-header-copy">
+                        <h2 class="card-title">最近导入记录</h2>
+                        <p class="page-description">这里只显示管理员点击“确认补充导入”后产生的真实导入记录。</p>
+                    </div>
+                </div>
+
+                <div class="content-block" th:if="${lastJobExcelImportLog == null and jobExcelImportPreview != null}">
+                    <strong>还没有成功导入记录</strong>
+                    <span>还没有成功导入记录，当前仅完成 Excel 预览。</span>
+                </div>
+
+                <div class="content-block" th:if="${lastJobExcelImportLog == null and jobExcelImportPreview == null}">
+                    <strong>还没有成功导入记录</strong>
+                    <span>当前没有预览批次，也还没有执行过确认导入。</span>
+                </div>
+
+                <div th:if="${lastJobExcelImportLog != null}">
+                    <div class="meta-grid spacer-top">
+                        <div class="meta-item">
+                            <span class="meta-label">导入批次号</span>
+                            <span class="meta-value" th:text="${lastJobExcelImportLog.importBatchNo != null ? lastJobExcelImportLog.importBatchNo : '-'}">JOBEXCEL-20260317183000-ABCD</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">导入文件名</span>
+                            <span class="meta-value" th:text="${lastJobExcelImportLog.fileName != null ? lastJobExcelImportLog.fileName : '-'}">school-jobs.xlsx</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">导入时间</span>
+                            <span class="meta-value" th:text="${lastJobExcelImportLog.createdAt != null ? #temporals.format(lastJobExcelImportLog.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-17 18:00:00</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">原始快照数</span>
+                            <span class="meta-value" th:text="${lastJobExcelImportLog.snapshotCount != null ? lastJobExcelImportLog.snapshotCount : 0}">0</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">新增 / 补充</span>
+                            <span class="meta-value"
+                                  th:text="${(lastJobExcelImportLog.addedCount != null ? lastJobExcelImportLog.addedCount : 0) + ' / ' + (lastJobExcelImportLog.updatedCount != null ? lastJobExcelImportLog.updatedCount : 0)}">
+                                0 / 0
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">跳过 / 失败</span>
+                            <span class="meta-value"
+                                  th:text="${(lastJobExcelImportLog.skippedCount != null ? lastJobExcelImportLog.skippedCount : 0) + ' / ' + (lastJobExcelImportLog.failedCount != null ? lastJobExcelImportLog.failedCount : 0)}">
+                                0 / 0
+                            </span>
+                        </div>
+                    </div>
+                    <span class="small-note spacer-top">最近导入记录只表示真实写库结果，不表示当前预览批次。</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="table-card spacer-top" th:if="${jobExcelImportPreview != null}">
+            <div class="page-header jobs-section-header">
+                <div class="page-header-copy">
+                    <h2 class="card-title">Excel 导入预览明细</h2>
+                    <p class="page-description">以下是本次预览识别出的字段与动作判断，尚未写库。</p>
+                </div>
+            </div>
+
+            <div class="content-block">
+                <strong>本次将补充的字段摘要</strong>
+                <div class="inline-list" th:if="${not #lists.isEmpty(jobExcelImportPreview.supplementFieldSummary)}">
+                    <span th:each="field : ${jobExcelImportPreview.supplementFieldSummary}" th:text="${field}">学历要求</span>
+                </div>
+                <span class="small-note" th:if="${#lists.isEmpty(jobExcelImportPreview.supplementFieldSummary)}">当前文件未识别到可写入字段。</span>
+            </div>
+
+            <div class="content-block spacer-top">
+                <strong>已识别表头</strong>
+                <span th:text="${#strings.listJoin(jobExcelImportPreview.recognizedHeaders, '、')}">职位ID、职位名称</span>
+            </div>
+
+            <div class="content-block" th:if="${not #lists.isEmpty(jobExcelImportPreview.missingHeaders)}">
+                <strong>本次文件缺失表头</strong>
+                <span th:text="${#strings.listJoin(jobExcelImportPreview.missingHeaders, '、')}">公司简称、公司福利标签</span>
+            </div>
+
+            <div class="table-scroll spacer-top">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>行号</th>
+                        <th>职位ID</th>
+                        <th>职位名称</th>
+                        <th>公司名称</th>
+                        <th>学历要求</th>
+                        <th>专业要求</th>
+                        <th>招聘人数</th>
+                        <th>薪资范围</th>
+                        <th>职位性质</th>
+                        <th>公司规模</th>
+                        <th>公司地址摘要</th>
+                        <th>是否公开</th>
+                        <th>导入动作</th>
+                        <th>说明原因</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${jobExcelImportPreview.items}">
+                        <td th:text="${item.rowNumber != null ? item.rowNumber : '-'}">2</td>
+                        <td th:text="${item.sourceJobId != null and !#strings.isEmpty(item.sourceJobId) ? item.sourceJobId : '-'}">JOB-1001</td>
+                        <td th:text="${item.jobName != null and !#strings.isEmpty(item.jobName) ? item.jobName : '-'}">Java后端工程师</td>
+                        <td th:text="${item.companyName != null and !#strings.isEmpty(item.companyName) ? item.companyName : '-'}">示例公司</td>
+                        <td th:text="${item.educationRequirement != null and !#strings.isEmpty(item.educationRequirement) ? item.educationRequirement : '-'}">本科</td>
+                        <td th:text="${item.majorRequirement != null and !#strings.isEmpty(item.majorRequirement) ? item.majorRequirement : '-'}">计算机相关</td>
+                        <td th:text="${item.headCountText != null and !#strings.isEmpty(item.headCountText) ? item.headCountText : '-'}">3</td>
+                        <td th:text="${item.salaryRange != null and !#strings.isEmpty(item.salaryRange) ? item.salaryRange : '-'}">8000 ~ 12000</td>
+                        <td th:text="${item.jobNature != null and !#strings.isEmpty(item.jobNature) ? item.jobNature : '-'}">全职</td>
+                        <td th:text="${item.companySize != null and !#strings.isEmpty(item.companySize) ? item.companySize : '-'}">500-999人</td>
+                        <td th:text="${item.companyAddressSummary != null and !#strings.isEmpty(item.companyAddressSummary) ? item.companyAddressSummary : '-'}">郑州高新区...</td>
+                        <td th:text="${item.publicStatus != null and !#strings.isEmpty(item.publicStatus) ? item.publicStatus : '-'}">公开</td>
+                        <td th:text="${item.action}">新增</td>
+                        <td th:text="${item.reason}">数据库中不存在该职位ID，将新增岗位。</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="table-card spacer-top">
+            <div class="page-header jobs-section-header">
+                <div class="page-header-copy">
+                    <h2 class="card-title">岗位列表</h2>
+                    <p class="page-description">这里只展示当前已经存在于数据库中的岗位，不会把尚未确认导入的预览批次混进来。</p>
+                </div>
+            </div>
+
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>岗位信息</th>
+                        <th>中文摘要</th>
+                        <th>岗位要求</th>
+                        <th>标签与状态</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(jobs)}">
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <h2 class="empty-title">当前还没有岗位数据</h2>
+                                <p class="empty-text">可以直接新增岗位，也可以先选择 Excel 生成预览，再决定是否导入。</p>
+                                <div class="actions-row spacer-top">
+                                    <button class="btn btn-secondary" type="button" id="jobExcelEmptyTrigger">Excel 导入岗位数据（生成预览）</button>
+                                    <a class="btn btn-primary" th:href="@{/jobs/new}">立即新增岗位</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="job : ${jobs}">
+                        <td th:text="${job.id}">1</td>
+                        <td>
+                            <div class="content-block">
+                                <strong th:text="${job.displayTitle}">Java后端 / 开发岗位</strong>
+                                <span class="small-note"
+                                      th:text="${job.jobDirection + ' / ' + (job.companyName != null and !#strings.isEmpty(job.companyName) ? job.companyName : '公开来源')}">
+                                    Java后端 / 公开来源
+                                </span>
+                                <span class="small-note"
+                                      th:text="${job.readableLocationDisplay + ' / ' + (job.sourceName != null and !#strings.isEmpty(job.sourceName) ? job.sourceName : '来源待补充')}">
+                                    郑州 / SCHOOL_JOB_EXCEL
+                                </span>
+                                <span class="small-note"
+                                      th:if="${job.sourceJobId != null and !#strings.isEmpty(job.sourceJobId)}"
+                                      th:text="${'职位ID：' + job.sourceJobId}">
+                                    职位ID：JOB-1001
+                                </span>
+                                <a class="resource-link"
+                                   th:if="${job.externalUrl != null and !#strings.isEmpty(job.externalUrl)}"
+                                   th:href="${job.externalUrl}" target="_blank" rel="noopener noreferrer">查看原始链接</a>
+                                <details>
+                                    <summary class="small-note">查看原始内容</summary>
+                                    <div class="content-block spacer-top">
+                                        <span class="small-note" th:text="${job.rawTitle}">Raw title</span>
+                                        <pre class="preformatted" th:text="${job.rawContent}">Raw content</pre>
+                                    </div>
+                                </details>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="content-block">
+                                <span th:text="${job.displaySummary}">整理后的中文摘要</span>
+                                <span class="small-note"
+                                      th:text="${job.displayDifficulty + ' / ' + job.displayStage + ' / ' + (job.suitableGrade != null and !#strings.isEmpty(job.suitableGrade) ? job.suitableGrade : '不限')}">
+                                    入门 / 校招岗位 / 应届
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="content-block">
+                                <strong>岗位要求</strong>
+                                <ul class="bullet-list compact-list">
+                                    <li th:each="item : ${job.requirementItemList}" th:text="${item}">熟悉 Java / Spring Boot</li>
+                                    <li th:if="${#lists.isEmpty(job.requirementItemList)}">暂无结构化要求</li>
+                                </ul>
+                                <strong>加分项</strong>
+                                <ul class="bullet-list compact-list">
+                                    <li th:each="item : ${job.bonusPointItemList}" th:text="${item}">有项目经验</li>
+                                    <li th:if="${#lists.isEmpty(job.bonusPointItemList)}">暂无加分项</li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="content-block">
+                                <div class="inline-list">
+                                    <span th:each="tag : ${job.displayTagList}" th:text="${tag}">Java后端</span>
+                                    <span th:if="${#lists.isEmpty(job.displayTagList)}">未补标签</span>
+                                </div>
+                                <span class="status-badge"
+                                      th:classappend="${job.organized ? ' status-gemini' : ' status-fallback'}"
+                                      th:text="${job.normalizedStatus}">已中文化 / 已补标签</span>
+                                <span class="small-note"
+                                      th:text="${'来源语言：' + job.sourceLanguage + ' / 展示语言：' + job.displayLanguage}">
+                                    来源语言：中文 / 展示语言：中文
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a class="btn btn-secondary" th:href="@{/jobs/{id}(id=${job.id})}">详情</a>
+                                <a class="btn btn-secondary" th:href="@{/jobs/edit/{id}(id=${job.id})}">编辑</a>
+                                <a class="btn btn-danger"
+                                   th:href="@{/jobs/delete/{id}(id=${job.id})}"
+                                   onclick="return confirm('确定要删除这个岗位吗？');">删除</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script>
+    (function () {
+        const fileInput = document.getElementById('jobExcelFileInput');
+        const uploadForm = document.getElementById('jobExcelImportForm');
+        const triggerIds = ['jobExcelImportTrigger', 'jobExcelReuploadTrigger', 'jobExcelEmptyTrigger', 'jobExcelPrimaryTrigger'];
+
+        function openPicker() {
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        triggerIds.forEach(function (id) {
+            const trigger = document.getElementById(id);
+            if (trigger) {
+                trigger.addEventListener('click', openPicker);
+            }
+        });
+
+        if (fileInput && uploadForm) {
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    uploadForm.submit();
+                }
+            });
+        }
+    })();
+</script>
+</body>
+</html>

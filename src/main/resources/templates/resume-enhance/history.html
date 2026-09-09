@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 简历优化历史</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='resume-optimize')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Resume Optimize History</div>
+                    <h1 class="page-title">简历优化历史</h1>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize}">新建优化任务</a>
+                    <a class="btn btn-primary" th:href="@{/history-center}">我的记录</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="result-stack spacer-top">
+            <article class="result-card glow-card" th:each="item : ${records}">
+                <h2 class="card-title" th:text="${jobNameMap[item.jobPostId]}">Java 后端</h2>
+                <div class="content-block">
+                    <strong>用户</strong>
+                    <span th:text="${userNameMap[item.userProfileId]}">张同学</span>
+                </div>
+                <div class="content-block">
+                    <strong>输入方式</strong>
+                    <span th:text="${item.inputType}">TEXT</span>
+                </div>
+                <div class="content-block">
+                    <strong>评分</strong>
+                    <span th:text="${item.reviewScore}">82</span>
+                </div>
+                <div class="actions-row">
+                    <a class="btn btn-primary" th:href="@{/resume-optimize/{id}(id=${item.id})}">查看详情</a>
+                </div>
+            </article>
+        </section>
+    </div>
+</main>
+</body>
+</html>

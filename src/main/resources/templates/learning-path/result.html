@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 补强方案</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='strength-plan')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card strength-summary-card">
+            <div class="page-header">
+                <div class="page-header-copy compact-header-copy">
+                    <div class="eyebrow">Strength Plan Result</div>
+                    <h1 class="page-title compact-title">岗位补强方案</h1>
+                    <p class="page-description compact-description">
+                        这里会把岗位匹配短板、当前档案短板、最近一次简历问题和用户偏好整理成一份可执行的补强路线。
+                        AI 可用时会输出更像真人教练的优先建议，不可用时则回退到规则方案。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/strength-plan/history}">方案历史</a>
+                    <button class="btn btn-secondary"
+                            id="regenerate-strength-plan-btn"
+                            type="button"
+                            th:if="${userProfile != null and jobPost != null}"
+                            th:attr="data-user-profile-id=${userProfile.id},data-target-job-id=${jobPost.id},data-source=${source != null ? source : 'result'}">
+                        重新生成
+                    </button>
+                    <a class="btn btn-primary" th:href="@{/history-center}">我的记录</a>
+                </div>
+            </div>
+
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <strong>目标岗位</strong>
+                    <span id="sp-job" th:text="${jobPost != null ? jobPost.displayTitle + ' / ' + jobPost.jobDirection : '-'}">Java 后端工程师 / Java 后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>当前档案</strong>
+                    <span id="sp-profile" th:text="${userProfile != null ? userProfile.studentName + ' / ' + userProfile.targetDirection : '-'}">张同学 / Java 后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>短板摘要</strong>
+                    <span id="sp-summary" th:text="${resultView.weaknessSourceSummary}">岗位 2 项 / 档案 2 项 / 简历 1 项</span>
+                </div>
+                <div class="content-block">
+                    <strong>建议学习时长</strong>
+                    <span id="sp-duration" th:text="${advice.estimatedDuration}">6-8 周</span>
+                </div>
+                <div class="content-block">
+                    <strong>投递准备建议</strong>
+                    <span id="sp-delivery" th:text="${advice.deliveryReadiness}">补强完成后再集中投递</span>
+                </div>
+                <div class="content-block">
+                    <strong>当前阶段建议</strong>
+                    <span id="sp-level" th:text="${advice.suggestedLevel}">先补基础再集中投递</span>
+                </div>
+            </div>
+
+            <div class="advice-source-row spacer-top">
+                <span id="sp-status-label"
+                      class="status-badge"
+                      th:classappend="${advice.coachGenerationSource == 'FALLBACK' and advice.learningStepsGenerationSource == 'FALLBACK'} ? ' status-fallback' : ' status-gemini'">已生成</span>
+                <span id="sp-coach-source"
+                      class="status-badge"
+                      th:classappend="${advice.coachGenerationSource == 'QWEN' ? ' status-qwen' : (advice.coachGenerationSource == 'GEMINI' ? ' status-gemini' : ' status-fallback')}"
+                      th:text="${coachSourceLabel}">Rule</span>
+                <span id="sp-step-source"
+                      class="status-badge"
+                      th:classappend="${advice.learningStepsGenerationSource == 'QWEN' ? ' status-qwen' : (advice.learningStepsGenerationSource == 'GEMINI' ? ' status-gemini' : ' status-fallback')}"
+                      th:text="${advice.learningStepsGenerationSource == 'GEMINI' ? 'Gemini' : (advice.learningStepsGenerationSource == 'QWEN' ? 'Qwen' : (advice.learningStepsGenerationSource == 'FALLBACK' ? 'Rule' : 'Pending'))}">Rule</span>
+                <span id="sp-created-at"
+                      class="small-note"
+                      th:text="${advice.createdAt != null ? #temporals.format(advice.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-26 10:00:00</span>
+                <span id="sp-coach-model"
+                      class="small-note"
+                      th:text="${advice.coachModelName != null and !#strings.isEmpty(advice.coachModelName) ? '教练模型：' + advice.coachModelName : ''}">教练模型：gemini</span>
+                <span id="sp-step-model"
+                      class="small-note"
+                      th:text="${advice.learningStepsModelName != null and !#strings.isEmpty(advice.learningStepsModelName) ? '步骤模型：' + advice.learningStepsModelName : ''}">步骤模型：qwen</span>
+                <span id="sp-coach-fallback"
+                      class="small-note"
+                      th:text="${advice.coachFallbackReason != null and !#strings.isEmpty(advice.coachFallbackReason) ? advice.coachFallbackReason : ''}"></span>
+                <span id="sp-step-fallback"
+                      class="small-note"
+                      th:text="${advice.learningStepsFallbackReason != null and !#strings.isEmpty(advice.learningStepsFallbackReason) ? advice.learningStepsFallbackReason : ''}"></span>
+            </div>
+
+            <div class="content-block" id="sp-loading-box" style="display:none;">
+                <span class="status-badge status-qwen">更新中</span>
+                <span id="sp-loading-text">正在重新整理补强方案，请稍候。</span>
+            </div>
+        </section>
+
+        <section class="strength-coach-grid spacer-top">
+            <article class="result-card glow-card coach-callout">
+                <div class="section-pill">AI 教练建议</div>
+                <p class="coach-summary-copy" id="sp-coach-summary" th:text="${resultView.coachSummary}">
+                    先补齐最影响投递通过率的短板，再集中推进目标岗位。
+                </p>
+                <div class="content-block">
+                    <strong>为什么这些短板会影响投递</strong>
+                    <span id="sp-impact" th:text="${resultView.impactExplanation}">
+                        这些短板会同时影响规则匹配、简历说服力和面试准备成本。
+                    </span>
+                </div>
+                <div class="content-block">
+                    <strong>当前偏好与目标</strong>
+                    <span id="sp-preference-summary" th:text="${resultView.preferenceSummary}">城市 广州 / 薪资 6k-8k / 岗位 产品经理</span>
+                </div>
+            </article>
+
+            <div class="coach-side-stack">
+                <article class="content-block">
+                    <strong>优先补什么</strong>
+                    <span id="sp-priority-focus" th:text="${resultView.priorityFocus}">优先补齐最影响通过率的短板</span>
+                </article>
+                <article class="content-block">
+                    <strong>先补技能还是先补项目</strong>
+                    <span id="sp-focus-order"
+                          th:text="${resultView.skillOrProjectFirst == 'PROJECT_FIRST' ? '先补项目证明，再反推能力表达' : (resultView.skillOrProjectFirst == 'SKILL_FIRST' ? '先补核心技能，再进入项目强化' : '技能与项目并行推进')}">
+                        先补项目证明，再反推能力表达
+                    </span>
+                </article>
+                <article class="content-block">
+                    <strong>投递时点建议</strong>
+                    <span id="sp-delivery-timing" th:text="${resultView.deliveryTimingAdvice}">补强完成后再集中投递</span>
+                </article>
+                <article class="content-block">
+                    <strong>下一步建议动作</strong>
+                    <span id="sp-next-action" th:text="${resultView.nextActionSuggestion}">先去简历优化，再进入模拟面试和重新匹配</span>
+                </article>
+                <article class="content-block" id="sp-resume-note" th:if="${resultView.resumeSignalsMissing}">
+                    <strong>提醒</strong>
+                    <span>当前还没有检测到最近一次简历记录，本页建议会更依赖岗位与档案信息。</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="result-stack spacer-top">
+            <article class="result-card glow-card">
+                <h2 class="card-title">当前短板来源</h2>
+                <div class="weakness-source-grid spacer-top">
+                    <div class="content-block">
+                        <strong>岗位匹配短板</strong>
+                        <ul class="bullet-list compact-list" id="sp-match-weaknesses">
+                            <li th:each="item : ${resultView.matchWeaknesses}" th:text="${item}">匹配短板</li>
+                        </ul>
+                    </div>
+                    <div class="content-block">
+                        <strong>档案短板</strong>
+                        <ul class="bullet-list compact-list" id="sp-profile-weaknesses">
+                            <li th:each="item : ${resultView.profileWeaknesses}" th:text="${item}">档案短板</li>
+                        </ul>
+                    </div>
+                    <div class="content-block">
+                        <strong>简历问题</strong>
+                        <ul class="bullet-list compact-list" id="sp-resume-weaknesses">
+                            <li th:each="item : ${resultView.resumeWeaknesses}" th:text="${item}">简历问题</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">推荐补强顺序</h2>
+                <div class="order-grid spacer-top" id="sp-suggested-order">
+                    <article class="order-step" th:each="item, stat : ${resultView.suggestedOrder}">
+                        <span class="order-step-number" th:text="${stat.count}">1</span>
+                        <span th:text="${item}">先补核心技能</span>
+                    </article>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">推荐学习步骤</h2>
+                <ol class="ordered-plan" id="sp-learning-steps">
+                    <li th:each="step : ${resultView.learningSteps}" th:text="${step}">学习步骤</li>
+                </ol>
+            </article>
+
+            <div class="strategy-grid">
+                <article class="strategy-card">
+                    <span class="strategy-label">推荐项目方向</span>
+                    <ul class="bullet-list compact-list" id="sp-projects">
+                        <li th:each="item : ${resultView.recommendedProjects}" th:text="${item}">项目建议</li>
+                    </ul>
+                </article>
+                <article class="strategy-card">
+                    <span class="strategy-label">推荐资源类型</span>
+                    <div class="resource-type-row" id="sp-resource-types">
+                        <span class="resource-type-chip" th:each="item : ${resultView.resourceTypeSuggestions}" th:text="${item}">官方文档</span>
+                    </div>
+                </article>
+                <article class="strategy-card">
+                    <span class="strategy-label">学习时长与投递节奏</span>
+                    <span class="strategy-value" th:text="${advice.estimatedDuration}">6-8 周</span>
+                    <span class="strategy-value" th:text="${resultView.deliveryTimingAdvice}">补强完成后再集中投递</span>
+                </article>
+            </div>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">推荐资源</h2>
+                <div class="resource-grid spacer-top" id="sp-resources">
+                    <article class="resource-card" th:each="resource : ${resultView.recommendedResources}">
+                        <div class="resource-card-head">
+                            <h3 class="resource-title" th:text="${resource.title}">Spring 官方文档</h3>
+                            <span class="type-pill" th:text="${resource.resourceType}">官方文档</span>
+                        </div>
+                        <div class="resource-meta">
+                            <span class="small-note" th:text="${'适用阶段：' + resource.stage}">适用阶段：入门阶段</span>
+                        </div>
+                        <div class="content-block spacer-top" th:if="${resource.summary != null and !#strings.isEmpty(resource.summary)}">
+                            <strong>一句话摘要</strong>
+                            <span th:text="${resource.summary}">资源摘要</span>
+                        </div>
+                        <div class="content-block" th:if="${resource.originalTitle != null and !#strings.isEmpty(resource.originalTitle) and resource.originalTitle != resource.title}">
+                            <strong>原始标题</strong>
+                            <span class="small-note" th:text="${resource.originalTitle}">Original title</span>
+                        </div>
+                        <a class="resource-link"
+                           th:if="${resource.link != null and !#strings.isEmpty(resource.link) and resource.link != '-'}"
+                           th:href="${resource.link}" target="_blank" rel="noopener noreferrer"
+                           th:text="${resource.link}">https://spring.io/guides</a>
+                        <span class="small-note"
+                              th:if="${resource.link == null or #strings.isEmpty(resource.link) or resource.link == '-'}">暂无链接</span>
+                    </article>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">投递准备区</h2>
+                <div class="content-block">
+                    <strong>投递前建议完成</strong>
+                    <ul class="bullet-list compact-list" id="sp-delivery-checklist">
+                        <li th:each="item : ${resultView.deliveryChecklist}" th:text="${item}">准备项</li>
+                    </ul>
+                </div>
+            </article>
+        </section>
+
+        <section class="highlight-card glow-card spacer-top">
+            <div class="section-pill">下一步动作</div>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-primary"
+                   th:if="${userProfile != null and jobPost != null}"
+                   th:href="@{/resume-optimize(profileId=${userProfile.id},jobId=${jobPost.id},source='strength-plan')}">去简历优化</a>
+                <a class="btn btn-primary"
+                   th:if="${userProfile == null or jobPost == null}"
+                   th:href="@{/resume-optimize}">去简历优化</a>
+
+                <a class="btn btn-secondary"
+                   th:if="${userProfile != null and jobPost != null}"
+                   th:href="@{/interview(profileId=${userProfile.id},jobId=${jobPost.id},source='strength-plan')}">开始模拟面试</a>
+                <a class="btn btn-secondary"
+                   th:if="${userProfile == null or jobPost == null}"
+                   th:href="@{/interview}">开始模拟面试</a>
+
+                <a class="btn btn-secondary"
+                   th:if="${userProfile != null}"
+                   th:href="@{/match/{profileId}(profileId=${userProfile.id})}">重新匹配岗位</a>
+                <a class="btn btn-secondary" th:href="@{/history-center}">查看我的记录</a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script>
+    (function () {
+        const button = document.getElementById("regenerate-strength-plan-btn");
+        if (!button) {
+            return;
+        }
+
+        const loadingBox = document.getElementById("sp-loading-box");
+        const loadingText = document.getElementById("sp-loading-text");
+        const statusLabel = document.getElementById("sp-status-label");
+
+        function escapeHtml(value) {
+            return String(value || "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        function sourceLabel(source) {
+            if (source === "GEMINI") {
+                return "Gemini";
+            }
+            if (source === "QWEN") {
+                return "Qwen";
+            }
+            if (source === "FALLBACK") {
+                return "Rule";
+            }
+            return "Pending";
+        }
+
+        function focusOrderLabel(value) {
+            if (value === "PROJECT_FIRST") {
+                return "先补项目证明，再反推能力表达";
+            }
+            if (value === "SKILL_FIRST") {
+                return "先补核心技能，再进入项目强化";
+            }
+            return "技能与项目并行推进";
+        }
+
+        function renderList(containerId, items) {
+            const container = document.getElementById(containerId);
+            if (!container) {
+                return;
+            }
+            const safeItems = Array.isArray(items) && items.length > 0 ? items : ["暂无数据"];
+            container.innerHTML = safeItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+        }
+
+        function renderOrderSteps(items) {
+            const container = document.getElementById("sp-suggested-order");
+            if (!container) {
+                return;
+            }
+            const safeItems = Array.isArray(items) && items.length > 0 ? items : ["先补齐最关键短板"];
+            container.innerHTML = safeItems.map((item, index) => `
+                <article class="order-step">
+                    <span class="order-step-number">${index + 1}</span>
+                    <span>${escapeHtml(item)}</span>
+                </article>
+            `).join("");
+        }
+
+        function renderResourceTypes(items) {
+            const container = document.getElementById("sp-resource-types");
+            if (!container) {
+                return;
+            }
+            const safeItems = Array.isArray(items) && items.length > 0 ? items : ["官方文档"];
+            container.innerHTML = safeItems.map((item) => `<span class="resource-type-chip">${escapeHtml(item)}</span>`).join("");
+        }
+
+        function renderResources(resources) {
+            const container = document.getElementById("sp-resources");
+            if (!container) {
+                return;
+            }
+
+            const safeResources = Array.isArray(resources) && resources.length > 0 ? resources : [];
+            if (!safeResources.length) {
+                container.innerHTML = '<div class="content-block">暂无资源推荐</div>';
+                return;
+            }
+
+            container.innerHTML = safeResources.map((resource) => `
+                <article class="resource-card">
+                    <div class="resource-card-head">
+                        <h3 class="resource-title">${escapeHtml(resource.title || "未命名资源")}</h3>
+                        <span class="type-pill">${escapeHtml(resource.resourceType || "学习资源")}</span>
+                    </div>
+                    <div class="resource-meta">
+                        <span class="small-note">适用阶段：${escapeHtml(resource.stage || "通用")}</span>
+                    </div>
+                    ${resource.summary ? `<div class="content-block spacer-top"><strong>一句话摘要</strong><span>${escapeHtml(resource.summary)}</span></div>` : ""}
+                    ${resource.originalTitle && resource.originalTitle !== resource.title ? `<div class="content-block"><strong>原始标题</strong><span class="small-note">${escapeHtml(resource.originalTitle)}</span></div>` : ""}
+                    ${resource.link && resource.link !== "-" ? `<a class="resource-link" href="${escapeHtml(resource.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(resource.link)}</a>` : '<span class="small-note">暂无链接</span>'}
+                </article>
+            `).join("");
+        }
+
+        function setStatus(text, badgeClass) {
+            if (!statusLabel) {
+                return;
+            }
+            statusLabel.textContent = text;
+            statusLabel.className = "status-badge";
+            if (badgeClass) {
+                statusLabel.classList.add(badgeClass);
+            }
+        }
+
+        function sourceBadgeClass(source) {
+            if (source === "GEMINI") {
+                return "status-gemini";
+            }
+            if (source === "QWEN") {
+                return "status-qwen";
+            }
+            return "status-fallback";
+        }
+
+        function setSourceBadge(id, text, source) {
+            const node = document.getElementById(id);
+            if (!node) {
+                return;
+            }
+            node.textContent = text;
+            node.className = "status-badge";
+            node.classList.add(sourceBadgeClass(source));
+        }
+
+        button.addEventListener("click", async function () {
+            const userProfileId = button.getAttribute("data-user-profile-id");
+            const targetJobId = button.getAttribute("data-target-job-id");
+            const source = button.getAttribute("data-source") || "result";
+            if (!userProfileId || !targetJobId) {
+                return;
+            }
+
+            button.disabled = true;
+            const originalText = button.textContent;
+            button.textContent = "更新中...";
+            setStatus("更新中", "status-qwen");
+
+            if (loadingBox) {
+                loadingBox.style.display = "";
+            }
+            if (loadingText) {
+                loadingText.textContent = "正在重新整理补强方案，请稍候。";
+            }
+
+            const timeoutId = window.setTimeout(function () {
+                if (loadingText) {
+                    loadingText.textContent = "处理时间较长，请继续等待。";
+                }
+            }, 12000);
+
+            try {
+                const response = await fetch("/strength-plan/regenerate-json", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"},
+                    body: new URLSearchParams({
+                        userProfileId,
+                        targetJobId,
+                        source
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                document.getElementById("sp-job").textContent = `${data.jobName || "-"} / ${data.jobDirection || "-"}`;
+                document.getElementById("sp-profile").textContent = `${data.profileName || "-"} / ${data.profileDirection || "-"}`;
+                document.getElementById("sp-summary").textContent = data.weaknessSourceSummary || "-";
+                document.getElementById("sp-duration").textContent = data.estimatedDuration || "-";
+                document.getElementById("sp-delivery").textContent = data.deliveryReadiness || "-";
+                document.getElementById("sp-level").textContent = data.suggestedLevel || "-";
+                document.getElementById("sp-created-at").textContent = data.createdAt ? String(data.createdAt).replace("T", " ") : "-";
+                document.getElementById("sp-coach-summary").textContent = data.coachSummary || "-";
+                document.getElementById("sp-impact").textContent = data.impactExplanation || "-";
+                document.getElementById("sp-priority-focus").textContent = data.priorityFocus || "-";
+                document.getElementById("sp-focus-order").textContent = focusOrderLabel(data.skillOrProjectFirst);
+                document.getElementById("sp-delivery-timing").textContent = data.deliveryTimingAdvice || "-";
+                document.getElementById("sp-next-action").textContent = data.nextActionSuggestion || "-";
+                document.getElementById("sp-preference-summary").textContent = data.preferenceSummary || "-";
+
+                const bothFallback = data.coachGenerationSource === "FALLBACK" && data.learningStepsGenerationSource === "FALLBACK";
+                setStatus("已更新", bothFallback ? "status-fallback" : "status-gemini");
+                setSourceBadge("sp-coach-source", data.coachSourceLabel || sourceLabel(data.coachGenerationSource), data.coachGenerationSource);
+                setSourceBadge("sp-step-source", data.learningStepsSourceLabel || sourceLabel(data.learningStepsGenerationSource), data.learningStepsGenerationSource);
+
+                const coachModel = document.getElementById("sp-coach-model");
+                if (coachModel) {
+                    coachModel.textContent = data.coachModelName ? `教练模型：${data.coachModelName}` : "";
+                }
+
+                const stepModel = document.getElementById("sp-step-model");
+                if (stepModel) {
+                    stepModel.textContent = data.learningStepsModelName ? `步骤模型：${data.learningStepsModelName}` : "";
+                }
+
+                const coachFallback = document.getElementById("sp-coach-fallback");
+                if (coachFallback) {
+                    coachFallback.textContent = data.coachFallbackReason || "";
+                }
+
+                const stepFallback = document.getElementById("sp-step-fallback");
+                if (stepFallback) {
+                    stepFallback.textContent = data.learningStepsFallbackReason || "";
+                }
+
+                const resumeNote = document.getElementById("sp-resume-note");
+                if (resumeNote) {
+                    resumeNote.style.display = data.resumeSignalsMissing ? "" : "none";
+                }
+
+                renderList("sp-match-weaknesses", data.matchWeaknesses);
+                renderList("sp-profile-weaknesses", data.profileWeaknesses);
+                renderList("sp-resume-weaknesses", data.resumeWeaknesses);
+                renderList("sp-learning-steps", data.learningSteps);
+                renderList("sp-projects", data.recommendedProjects);
+                renderList("sp-delivery-checklist", data.deliveryChecklist);
+                renderOrderSteps(data.suggestedOrder);
+                renderResourceTypes(data.resourceTypeSuggestions);
+                renderResources(data.recommendedResources);
+            } catch (error) {
+                setStatus("更新失败", "status-fallback");
+                if (loadingText) {
+                    loadingText.textContent = `更新失败：${error.message}`;
+                }
+            } finally {
+                window.clearTimeout(timeoutId);
+                button.disabled = false;
+                button.textContent = originalText;
+                if (loadingBox) {
+                    window.setTimeout(() => {
+                        loadingBox.style.display = "none";
+                    }, 1600);
+                }
+            }
+        });
+    })();
+</script>
+</body>
+</html>

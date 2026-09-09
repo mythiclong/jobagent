@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 简历优化预览</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='resume-optimize')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Resume Preview</div>
+                    <h1 class="page-title">解析预览与档案补全建议</h1>
+                    <p class="page-description">
+                        先确认简历已经被拆分成可读模块，再决定是否把识别到的信息补到求职档案，随后继续进入简历优化。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize}">重新上传</a>
+                    <a class="btn btn-secondary" th:href="@{/career-profile}">返回求职档案</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="split-summary spacer-top">
+            <article class="result-card glow-card">
+                <h2 class="card-title">解析结果</h2>
+                <div class="content-block">
+                    <strong>基础信息</strong>
+                    <pre class="preformatted" th:text="${parsedData.basicInfo}">基础信息</pre>
+                </div>
+                <div class="content-block">
+                    <strong>教育经历</strong>
+                    <pre class="preformatted" th:text="${parsedData.education}">教育经历</pre>
+                </div>
+                <div class="content-block">
+                    <strong>技能关键词</strong>
+                    <pre class="preformatted" th:text="${parsedData.skills}">技能关键词</pre>
+                </div>
+                <div class="content-block">
+                    <strong>项目经历</strong>
+                    <pre class="preformatted" th:text="${parsedData.projects}">项目经历</pre>
+                </div>
+                <div class="content-block">
+                    <strong>实习 / 校园经历</strong>
+                    <pre class="preformatted" th:text="${parsedData.experience}">实习 / 校园经历</pre>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">档案补全建议</h2>
+                <div class="content-block">
+                    <strong>同步方式</strong>
+                    <span th:text="${profileSyncSuggestion != null and profileSyncSuggestion.draftMode
+                        ? '如果当前还没有档案，会先生成待确认草稿；已有档案时只补充空白内容。'
+                        : '系统会展示已有值与识别值的差异，并优先补充空白字段。'}">
+                        如果当前还没有档案，会先生成待确认草稿；已有档案时只补充空白内容。
+                    </span>
+                </div>
+                <div class="content-block">
+                    <strong>建议数量</strong>
+                    <span th:text="${'推荐同步字段 ' + (profileSyncSuggestion != null ? profileSyncSuggestion.recommendedCount : 0) + ' 项'}">
+                        推荐同步字段 5 项
+                    </span>
+                </div>
+                <div class="content-block">
+                    <strong>当前档案</strong>
+                    <span th:text="${profileSyncSuggestion != null and !#strings.isEmpty(profileSyncSuggestion.profileDisplayName) ? profileSyncSuggestion.profileDisplayName : '未绑定档案，将创建草稿'}">
+                        张同学
+                    </span>
+                </div>
+                <div class="content-block">
+                    <strong>识别摘要</strong>
+                    <span th:text="${'目标岗位候选：'
+                        + (profileSyncSuggestion != null and !#strings.isEmpty(profileSyncSuggestion.recognizedDirection) ? profileSyncSuggestion.recognizedDirection : '暂无')
+                        + '；职业目标候选：'
+                        + (profileSyncSuggestion != null and !#strings.isEmpty(profileSyncSuggestion.recognizedCareerGoal) ? profileSyncSuggestion.recognizedCareerGoal : '暂无')}">
+                        目标岗位候选：后端开发；职业目标候选：希望进入后端开发实习岗位
+                    </span>
+                </div>
+                <div class="content-block" th:if="${profileSyncSuggestion != null}">
+                    <strong>同步状态</strong>
+                    <span th:text="${profileSyncSuggestion.hasRecommendedUpdates ? '当前有推荐同步项，可以先补全求职档案。' : '当前没有明显需要同步的字段，可以直接进入简历优化。'}">
+                        当前有推荐同步项，可以先补全求职档案。
+                    </span>
+                </div>
+                <table class="simple-table spacer-top">
+                    <thead>
+                    <tr>
+                        <th>字段</th>
+                        <th>当前值</th>
+                        <th>识别值</th>
+                        <th>建议动作</th>
+                    </tr>
+                    </thead>
+                    <tbody th:if="${profileSyncSuggestion != null and !#lists.isEmpty(profileSyncSuggestion.fieldSuggestions)}">
+                    <tr th:each="item : ${profileSyncSuggestion.fieldSuggestions}">
+                        <td th:text="${item != null and !#strings.isEmpty(item.label) ? item.label : '未命名字段'}">技能关键词</td>
+                        <td th:text="${item != null and !#strings.isEmpty(item.currentValue) ? item.currentValue : '待补充'}">待补充</td>
+                        <td th:text="${item != null and !#strings.isEmpty(item.recognizedValue) ? item.recognizedValue : '暂无识别值'}">Java / Spring Boot</td>
+                        <td th:text="${item != null and !#strings.isEmpty(item.suggestionAction) ? item.suggestionAction : '暂不建议同步'}">建议补全</td>
+                    </tr>
+                    </tbody>
+                    <tbody th:if="${profileSyncSuggestion == null or #lists.isEmpty(profileSyncSuggestion.fieldSuggestions)}">
+                    <tr>
+                        <td colspan="4">当前没有可展示的档案补全建议，你可以直接进入简历优化或返回求职档案。</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <form class="actions-row spacer-top" th:action="@{/career-profile/fill-from-resume}" method="post">
+                    <input type="hidden" name="userProfileId" th:value="${userProfile != null ? userProfile.id : null}">
+                    <input type="hidden" name="jobPostId" th:value="${jobPost != null ? jobPost.id : null}">
+                    <input type="hidden" name="inputType" th:value="${parsedData.inputType}">
+                    <input type="hidden" name="originalResumeText" th:value="${parsedData.originalText}">
+                    <input type="hidden" name="parsedBasicInfo" th:value="${parsedData.basicInfo}">
+                    <input type="hidden" name="parsedEducation" th:value="${parsedData.education}">
+                    <input type="hidden" name="parsedSkills" th:value="${parsedData.skills}">
+                    <input type="hidden" name="parsedProjects" th:value="${parsedData.projects}">
+                    <input type="hidden" name="parsedExperience" th:value="${parsedData.experience}">
+                    <input type="hidden" name="parsedOthers" th:value="${parsedData.others}">
+                    <button class="btn btn-secondary" type="submit">一键同步求职档案</button>
+                </form>
+            </article>
+        </section>
+
+        <section class="form-card glow-card spacer-top">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <h2 class="card-title">进入简历优化</h2>
+                    <p class="card-description">确认解析结果无误后，继续进入整体诊断、关键词补齐、模块改写和整份简历优化。</p>
+                </div>
+            </div>
+            <form class="field-grid"
+                  th:action="@{/resume-optimize/analyze}"
+                  method="post"
+                  data-ai-progress="true"
+                  data-ai-progress-label="正在分析简历内容"
+                  data-ai-progress-steps="整理简历和目标岗位信息|生成诊断摘要与优化建议|准备模块优化结果|进入简历优化工作台">
+                <input type="hidden" name="userProfileId" th:value="${userProfile != null ? userProfile.id : null}">
+                <input type="hidden" name="jobPostId" th:value="${jobPost != null ? jobPost.id : null}">
+                <input type="hidden" name="inputType" th:value="${parsedData.inputType}">
+                <input type="hidden" name="originalResumeText" th:value="${parsedData.originalText}">
+                <input type="hidden" name="parsedBasicInfo" th:value="${parsedData.basicInfo}">
+                <input type="hidden" name="parsedEducation" th:value="${parsedData.education}">
+                <input type="hidden" name="parsedSkills" th:value="${parsedData.skills}">
+                <input type="hidden" name="parsedProjects" th:value="${parsedData.projects}">
+                <input type="hidden" name="parsedExperience" th:value="${parsedData.experience}">
+                <input type="hidden" name="parsedOthers" th:value="${parsedData.others}">
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="submit" th:disabled="${!canAnalyze}">进入简历优化工作台</button>
+                </div>
+                <div class="content-block" th:if="${!canAnalyze}">
+                    <span>当前还没有绑定求职档案。你可以先同步档案，或先回到求职档案页面创建一份档案后再继续。</span>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+<script th:src="@{/js/ai-progress.js}"></script>
+</body>
+</html>

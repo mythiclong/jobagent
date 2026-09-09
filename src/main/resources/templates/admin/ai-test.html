@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | AI 测试</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='admin-ai-test')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="form-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Admin AI Test</div>
+                    <h1 class="page-title">AI 测试页</h1>
+                    <p class="page-description">
+                        用最小纯文本请求验证统一 AI 入口是否正常：Gemini 主通道，Qwen 备用通道，本地规则兜底。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/admin}">返回管理首页</a>
+                </div>
+            </div>
+
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <strong>Gemini</strong>
+                    <span th:text="${geminiModelName}">gemini</span>
+                    <span class="small-note" th:text="${'Key 来源: ' + geminiApiKeySource}">Key 来源</span>
+                    <span class="small-note" th:text="${'超时: ' + geminiTimeoutSeconds + 's'}">超时</span>
+                    <span class="status-badge"
+                          th:classappend="${geminiEnabled ? ' status-gemini' : ' status-fallback'}"
+                          th:text="${geminiEnabled ? '可用' : '未配置'}">可用</span>
+                </div>
+                <div class="content-block">
+                    <strong>Qwen</strong>
+                    <span th:text="${qwenModelName}">qwen</span>
+                    <span class="small-note" th:text="${'Key 来源: ' + qwenApiKeySource}">Key 来源</span>
+                    <span class="small-note" th:text="${'超时: ' + qwenTimeoutSeconds + 's'}">超时</span>
+                    <span class="status-badge"
+                          th:classappend="${qwenEnabled ? ' status-qwen' : ' status-fallback'}"
+                          th:text="${qwenEnabled ? '可用' : '未配置'}">可用</span>
+                </div>
+            </div>
+
+            <form class="field-grid spacer-top" id="admin-ai-test-form" th:action="@{/admin/ai-test}" method="post">
+                <div class="field-group">
+                    <label for="inputText">测试文本</label>
+                    <textarea id="inputText" name="inputText" class="textarea-field" rows="6"
+                              placeholder="输入任意测试文本" th:text="${inputText}">Please reply with: AI_TEST_OK</textarea>
+                </div>
+                <div class="actions-row">
+                    <button type="submit" class="btn btn-primary" id="admin-ai-test-submit">开始测试</button>
+                </div>
+            </form>
+
+            <div class="content-block spacer-top" id="admin-ai-test-loading" style="display:none;">
+                <span class="status-badge status-qwen">测试中</span>
+                <span id="admin-ai-test-loading-text">正在连接 Gemini 主通道，必要时会自动切换 Qwen…</span>
+            </div>
+        </section>
+
+        <section class="highlight-card glow-card spacer-top" id="admin-ai-test-result"
+                 th:style="${tested} ? '' : 'display:none;'">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <h2 class="card-title">测试结果</h2>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="content-block">
+                    <strong>是否成功</strong>
+                    <span class="status-badge" id="admin-ai-test-success"
+                          th:classappend="${success ? (resultMetadata.generationSource == 'QWEN' ? ' status-qwen' : ' status-gemini') : ' status-fallback'}"
+                          th:text="${success ? '成功' : '失败/已回退'}">成功</span>
+                </div>
+                <div class="content-block">
+                    <strong>最终来源</strong>
+                    <span class="status-badge" id="admin-ai-test-source"
+                          th:classappend="${resultMetadata.generationSource == 'GEMINI' ? ' status-gemini' : (resultMetadata.generationSource == 'QWEN' ? ' status-qwen' : ' status-fallback')}"
+                          th:text="${finalSourceLabel}">Gemini</span>
+                </div>
+                <div class="content-block">
+                    <strong>模型名</strong>
+                    <span id="admin-ai-test-model" th:text="${resultMetadata.modelName}">model</span>
+                </div>
+                <div class="content-block">
+                    <strong>是否超时</strong>
+                    <span id="admin-ai-test-timeout" th:text="${resultMetadata.timeoutOccurred ? '是' : '否'}">否</span>
+                </div>
+            </div>
+
+            <div class="content-block spacer-top">
+                <strong>返回文本</strong>
+                <pre class="preformatted" id="admin-ai-test-text" th:text="${resultText}">result</pre>
+            </div>
+
+            <div class="content-block spacer-top">
+                <strong>主失败原因（Gemini）</strong>
+                <span id="admin-ai-test-primary-reason" th:text="${resultMetadata.primaryFailureReason}">-</span>
+                <span class="small-note" id="admin-ai-test-primary-layer"
+                      th:text="${'Layer/Type: ' + resultMetadata.primaryFailureLayer + ' / ' + resultMetadata.primaryFailureType}">layer/type</span>
+            </div>
+
+            <div class="content-block spacer-top">
+                <strong>次失败原因（Qwen）</strong>
+                <span id="admin-ai-test-secondary-reason" th:text="${resultMetadata.secondaryFailureReason}">-</span>
+                <span class="small-note" id="admin-ai-test-secondary-layer"
+                      th:text="${'Layer/Type: ' + resultMetadata.secondaryFailureLayer + ' / ' + resultMetadata.secondaryFailureType}">layer/type</span>
+            </div>
+
+            <div class="content-block spacer-top">
+                <strong>最终回退说明</strong>
+                <span id="admin-ai-test-fallback" th:text="${resultMetadata.fallbackReason}">-</span>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script>
+    (function () {
+        const form = document.getElementById("admin-ai-test-form");
+        const submit = document.getElementById("admin-ai-test-submit");
+        const loadingBox = document.getElementById("admin-ai-test-loading");
+        const loadingText = document.getElementById("admin-ai-test-loading-text");
+        const resultCard = document.getElementById("admin-ai-test-result");
+        if (!form || !submit) {
+            return;
+        }
+
+        function setBadge(node, source, label, success) {
+            if (!node) {
+                return;
+            }
+            node.className = "status-badge";
+            if (!success || source === "FALLBACK") {
+                node.classList.add("status-fallback");
+            } else if (source === "QWEN") {
+                node.classList.add("status-qwen");
+            } else {
+                node.classList.add("status-gemini");
+            }
+            node.textContent = label;
+        }
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const inputText = document.getElementById("inputText").value || "";
+            submit.disabled = true;
+            const originalText = submit.textContent;
+            submit.textContent = "测试中...";
+
+            if (loadingBox) {
+                loadingBox.style.display = "";
+            }
+            if (loadingText) {
+                loadingText.textContent = "正在连接 Gemini 主通道，必要时会自动切换 Qwen…";
+            }
+
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => {
+                controller.abort();
+                if (loadingText) {
+                    loadingText.textContent = "请求超时，系统正在区分是网络问题、模型问题还是回退结果。";
+                }
+            }, 60000);
+
+            try {
+                const response = await fetch("/admin/ai-test/run", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"},
+                    body: new URLSearchParams({inputText}),
+                    signal: controller.signal
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (resultCard) {
+                    resultCard.style.display = "";
+                }
+                setBadge(
+                    document.getElementById("admin-ai-test-success"),
+                    data.source,
+                    data.success ? "成功" : "失败/已回退",
+                    data.success
+                );
+                setBadge(
+                    document.getElementById("admin-ai-test-source"),
+                    data.source,
+                    data.sourceLabel || data.source,
+                    true
+                );
+                document.getElementById("admin-ai-test-model").textContent = data.modelName || "";
+                document.getElementById("admin-ai-test-timeout").textContent = data.timeoutOccurred ? "是" : "否";
+                document.getElementById("admin-ai-test-text").textContent = data.text || "";
+                document.getElementById("admin-ai-test-primary-reason").textContent = data.primaryFailureReason || "-";
+                document.getElementById("admin-ai-test-primary-layer").textContent = `Layer/Type: ${data.primaryFailureLayer || "-"} / ${data.primaryFailureType || "-"}`;
+                document.getElementById("admin-ai-test-secondary-reason").textContent = data.secondaryFailureReason || "-";
+                document.getElementById("admin-ai-test-secondary-layer").textContent = `Layer/Type: ${data.secondaryFailureLayer || "-"} / ${data.secondaryFailureType || "-"}`;
+                document.getElementById("admin-ai-test-fallback").textContent = data.fallbackReason || "-";
+            } catch (error) {
+                if (resultCard) {
+                    resultCard.style.display = "";
+                }
+                setBadge(document.getElementById("admin-ai-test-success"), "FALLBACK", "失败/已回退", false);
+                setBadge(document.getElementById("admin-ai-test-source"), "FALLBACK", "Fallback", true);
+                document.getElementById("admin-ai-test-model").textContent = "local-rule";
+                document.getElementById("admin-ai-test-timeout").textContent = error.name === "AbortError" ? "是" : "否";
+                document.getElementById("admin-ai-test-text").textContent = "Rule fallback: AI service is unavailable. Please check key and network.";
+                document.getElementById("admin-ai-test-primary-reason").textContent = error.message || "Unknown error";
+                document.getElementById("admin-ai-test-primary-layer").textContent = "Layer/Type: UNKNOWN / UNKNOWN_EXCEPTION";
+                document.getElementById("admin-ai-test-secondary-reason").textContent = "-";
+                document.getElementById("admin-ai-test-secondary-layer").textContent = "Layer/Type: NONE / NONE";
+                document.getElementById("admin-ai-test-fallback").textContent = error.name === "AbortError" ? "请求超时，未在 60 秒内完成。" : "请求失败，已回退。";
+            } finally {
+                window.clearTimeout(timeoutId);
+                submit.disabled = false;
+                submit.textContent = originalText;
+                if (loadingBox) {
+                    setTimeout(() => {
+                        loadingBox.style.display = "none";
+                    }, 1200);
+                }
+            }
+        });
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="navbar(activePage)"
+     class="navbar-shell is-top"
+     data-navbar-shell
+     th:with="pageLabel=${activePage == 'dashboard' ? '首页'
+         : activePage == 'about' ? '产品说明'
+         : activePage == 'login' ? '登录'
+         : activePage == 'register' ? '注册'
+         : activePage == 'career-profile' or activePage == 'profiles' or activePage == 'resume' or activePage == 'resume-review' or activePage == 'resume-enhance' or activePage == 'resume-optimize' ? '求职档案'
+         : activePage == 'match' ? '岗位匹配'
+         : activePage == 'strength-plan' or activePage == 'learning-path' ? '补强方案'
+         : activePage == 'interview' ? '模拟面试'
+         : activePage == 'history-center' or activePage == 'history' ? '我的记录'
+         : activePage == 'admin-home' ? '管理首页'
+         : activePage == 'jobs' ? '岗位管理'
+         : activePage == 'admin-questions' ? '题库管理'
+         : activePage == 'admin-update' ? '数据更新'
+         : activePage == 'admin-records' ? '用户记录'
+         : activePage == 'admin-ai-test' ? 'AI 测试'
+         : '当前页面'}"
+     th:attr="data-active-page=${activePage},data-page-label=${pageLabel}">
+    <div class="navbar navbar-full" data-navbar-full>
+        <a class="brand-block brand-mark" th:href="@{/}">
+            <span class="brand-icon">职</span>
+            <span class="brand-copy">
+                <span class="brand-title">职航Agent</span>
+                <span class="brand-subtitle">学生求职准备平台</span>
+            </span>
+        </a>
+
+        <div class="nav-links" th:if="${!viewer.authenticated}">
+            <a class="nav-link" th:classappend="${activePage == 'dashboard'} ? ' active'" th:href="@{/}">首页</a>
+            <a class="nav-link" th:classappend="${activePage == 'about'} ? ' active'" th:href="@{/about}">产品说明</a>
+            <a class="nav-link" th:classappend="${activePage == 'login'} ? ' active'" th:href="@{/login}">登录</a>
+            <a class="nav-link" th:classappend="${activePage == 'register'} ? ' active'" th:href="@{/register}">注册</a>
+        </div>
+
+        <div class="nav-links" th:if="${viewer.user}">
+            <span class="nav-user-pill" th:text="${'你好，' + viewer.displayName}">你好，求职同学</span>
+            <a class="nav-link" th:classappend="${activePage == 'dashboard'} ? ' active'" th:href="@{/}">首页</a>
+            <a class="nav-link"
+               th:classappend="${activePage == 'career-profile' or activePage == 'profiles' or activePage == 'resume' or activePage == 'resume-review' or activePage == 'resume-enhance' or activePage == 'resume-optimize'} ? ' active'"
+               th:href="@{/career-profile}">求职档案</a>
+            <a class="nav-link" th:classappend="${activePage == 'match'} ? ' active'" th:href="@{/match}">岗位匹配</a>
+            <a class="nav-link"
+               th:classappend="${activePage == 'strength-plan' or activePage == 'learning-path'} ? ' active'"
+               th:href="@{/strength-plan}">补强方案</a>
+            <a class="nav-link" th:classappend="${activePage == 'interview'} ? ' active'" th:href="@{/interview}">模拟面试</a>
+            <a class="nav-link"
+               th:classappend="${activePage == 'history-center' or activePage == 'history'} ? ' active'"
+               th:href="@{/history-center}">我的记录</a>
+            <form class="nav-logout-form" th:action="@{/logout}" method="post">
+                <button class="nav-link nav-link-admin nav-link-button" type="submit">退出登录</button>
+            </form>
+        </div>
+
+        <div class="nav-links" th:if="${viewer.admin}">
+            <span class="nav-user-pill" th:text="${viewer.displayName}">系统管理员</span>
+            <a class="nav-link" th:classappend="${activePage == 'admin-home'} ? ' active'" th:href="@{/admin}">管理首页</a>
+            <a class="nav-link" th:classappend="${activePage == 'jobs'} ? ' active'" th:href="@{/jobs}">岗位管理</a>
+            <a class="nav-link" th:classappend="${activePage == 'admin-questions'} ? ' active'" th:href="@{/admin/questions}">题库管理</a>
+            <a class="nav-link" th:classappend="${activePage == 'admin-update'} ? ' active'" th:href="@{/admin/update-center}">数据更新</a>
+            <a class="nav-link" th:classappend="${activePage == 'admin-records'} ? ' active'" th:href="@{/admin/user-records}">用户记录</a>
+            <a class="nav-link" th:classappend="${activePage == 'admin-ai-test'} ? ' active'" th:href="@{/admin/ai-test}">AI 测试</a>
+            <form class="nav-logout-form" th:action="@{/logout}" method="post">
+                <button class="nav-link nav-link-admin nav-link-button" type="submit">退出登录</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="floating-quick-nav" data-floating-nav aria-hidden="true">
+        <div class="floating-quick-current">
+            <span class="floating-quick-logo">职</span>
+            <div class="floating-quick-copy">
+                <span class="floating-quick-brand">职航Agent</span>
+                <span class="floating-quick-page" th:text="${pageLabel}">当前页面</span>
+            </div>
+        </div>
+
+        <button class="floating-quick-toggle"
+                type="button"
+                data-quick-nav-toggle
+                aria-expanded="false"
+                aria-controls="floatingQuickMenu"
+                aria-label="打开快捷导航菜单">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <div class="floating-quick-menu" id="floatingQuickMenu" data-quick-nav-menu>
+            <div class="floating-quick-menu-head">
+                <span class="status-badge"
+                      th:classappend="${viewer.admin ? ' status-qwen' : (viewer.user ? ' status-gemini' : ' status-fallback')}"
+                      th:text="${viewer.admin ? '管理员' : (viewer.user ? '用户端' : '访客模式')}">用户端</span>
+                <span class="small-note" th:text="${viewer.authenticated ? viewer.displayName : '未登录'}">未登录</span>
+            </div>
+
+            <div class="floating-quick-menu-list" th:if="${!viewer.authenticated}">
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'dashboard'} ? ' is-active'" th:href="@{/}">首页</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'about'} ? ' is-active'" th:href="@{/about}">产品说明</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'login'} ? ' is-active'" th:href="@{/login}">登录</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'register'} ? ' is-active'" th:href="@{/register}">注册</a>
+            </div>
+
+            <div class="floating-quick-menu-list" th:if="${viewer.user}">
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'dashboard'} ? ' is-active'" th:href="@{/}">首页</a>
+                <a class="floating-quick-menu-link"
+                   th:classappend="${activePage == 'career-profile' or activePage == 'profiles' or activePage == 'resume' or activePage == 'resume-review' or activePage == 'resume-enhance' or activePage == 'resume-optimize'} ? ' is-active'"
+                   th:href="@{/career-profile}">求职档案</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'match'} ? ' is-active'" th:href="@{/match}">岗位匹配</a>
+                <a class="floating-quick-menu-link"
+                   th:classappend="${activePage == 'strength-plan' or activePage == 'learning-path'} ? ' is-active'"
+                   th:href="@{/strength-plan}">补强方案</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'interview'} ? ' is-active'" th:href="@{/interview}">模拟面试</a>
+                <a class="floating-quick-menu-link"
+                   th:classappend="${activePage == 'history-center' or activePage == 'history'} ? ' is-active'"
+                   th:href="@{/history-center}">我的记录</a>
+                <form class="floating-quick-menu-form" th:action="@{/logout}" method="post">
+                    <button class="floating-quick-menu-link floating-quick-menu-button" type="submit">退出登录</button>
+                </form>
+            </div>
+
+            <div class="floating-quick-menu-list" th:if="${viewer.admin}">
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'admin-home'} ? ' is-active'" th:href="@{/admin}">管理首页</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'jobs'} ? ' is-active'" th:href="@{/jobs}">岗位管理</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'admin-questions'} ? ' is-active'" th:href="@{/admin/questions}">题库管理</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'admin-update'} ? ' is-active'" th:href="@{/admin/update-center}">数据更新</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'admin-records'} ? ' is-active'" th:href="@{/admin/user-records}">用户记录</a>
+                <a class="floating-quick-menu-link" th:classappend="${activePage == 'admin-ai-test'} ? ' is-active'" th:href="@{/admin/ai-test}">AI 测试</a>
+                <form class="floating-quick-menu-form" th:action="@{/logout}" method="post">
+                    <button class="floating-quick-menu-link floating-quick-menu-button" type="submit">退出登录</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/header-shrink.js}"></script>
+</div>
+</body>
+</html>

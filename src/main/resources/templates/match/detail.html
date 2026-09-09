@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 岗位匹配详情</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='match')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Match Detail</div>
+                    <h1 class="page-title">岗位匹配详情</h1>
+                    <p class="page-description">这里集中展示当前岗位的匹配判断、岗位信息、短板分析和下一步建议。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/history-center}">我的记录</a>
+                    <a class="btn btn-secondary"
+                       th:if="${userProfile != null}"
+                       th:href="@{/match/{profileId}(profileId=${userProfile.id})}">返回匹配结果</a>
+                    <a class="btn btn-primary" th:href="@{/match}">重新匹配</a>
+                </div>
+            </div>
+
+            <div class="summary-grid spacer-top">
+                <div class="content-block">
+                    <strong>目标岗位</strong>
+                    <span th:text="${jobPost != null ? jobPost.displayTitle + ' / ' + (jobPost.jobDirection != null and !#strings.isEmpty(jobPost.jobDirection) ? jobPost.jobDirection : '-') : '岗位信息缺失'}">Java 后端工程师 / Java 后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>当前档案</strong>
+                    <span th:text="${userProfile != null ? userProfile.studentName + ' / ' + userProfile.targetDirection : '档案信息缺失'}">张同学 / Java 后端</span>
+                </div>
+                <div class="content-block">
+                    <strong>匹配时间</strong>
+                    <span th:text="${record.createdAt != null ? #temporals.format(record.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-15 20:00:00</span>
+                </div>
+                <div class="content-block">
+                    <strong>匹配分</strong>
+                    <span th:text="${record.matchScore != null ? record.matchScore : '-'}">85</span>
+                </div>
+                <div class="content-block">
+                    <strong>适配结论</strong>
+                    <span class="match-compat-pill"
+                          th:classappend="${record.compatibilityLevel == 'STRONG' ? ' is-strong' : (record.compatibilityLevel == 'WEAK' ? ' is-weak' : ' is-mismatch')}"
+                          th:text="${record.compatibilityLabel}">强适配</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="result-stack spacer-top" th:if="${jobPost != null}">
+            <article class="result-card glow-card">
+                <h2 class="card-title">岗位信息</h2>
+                <div class="match-core-grid spacer-top">
+                    <div class="content-block">
+                        <strong>公司名称</strong>
+                        <span th:text="${jobPost.companyNameDisplay}">示例公司</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>地点</strong>
+                        <span th:text="${jobPost.readableLocationDisplay}">-</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>薪资范围</strong>
+                        <span th:text="${jobPost.salaryRangeDisplay}">-</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>学历要求</strong>
+                        <span th:text="${jobPost.educationRequirementDisplay}">-</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>岗位性质</strong>
+                        <span th:text="${jobPost.jobNatureDisplay}">-</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>岗位类型</strong>
+                        <span th:text="${jobPost.sourceTypeKey == 'excel' ? '校招岗位' : (jobPost.sourceTypeKey == 'manual' ? '平台整理' : '推荐岗位')}">校招岗位</span>
+                    </div>
+                </div>
+
+                <div class="match-detail-grid spacer-top">
+                    <div class="content-block">
+                        <strong>岗位摘要</strong>
+                        <p class="match-detail-text" th:text="${jobPost.displaySummaryFullText}">整理后的岗位摘要</p>
+                    </div>
+                    <div class="content-block">
+                        <strong>岗位要求</strong>
+                        <ul class="bullet-list compact-list">
+                            <li th:each="item : ${jobPost.requirementItemList}" th:text="${item}">熟悉 Java / Spring Boot</li>
+                            <li th:if="${#lists.isEmpty(jobPost.requirementItemList)}">-</li>
+                        </ul>
+                    </div>
+                    <div class="content-block">
+                        <strong>加分项</strong>
+                        <ul class="bullet-list compact-list">
+                            <li th:each="item : ${jobPost.bonusPointItemList}" th:text="${item}">有项目经验</li>
+                            <li th:if="${#lists.isEmpty(jobPost.bonusPointItemList)}">-</li>
+                        </ul>
+                    </div>
+                    <div class="content-block">
+                        <strong>标签</strong>
+                        <div class="inline-list" th:if="${not #lists.isEmpty(jobPost.displayTagList)}">
+                            <span th:each="tag : ${jobPost.displayTagList}" th:text="${tag}">Java 后端</span>
+                        </div>
+                        <span th:if="${#lists.isEmpty(jobPost.displayTagList)}">-</span>
+                    </div>
+                    <div class="content-block">
+                        <strong>公司信息</strong>
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">公司性质</span>
+                                <span class="meta-value" th:text="${jobPost.companyTypeDisplay}">-</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">公司规模</span>
+                                <span class="meta-value" th:text="${jobPost.companySizeDisplay}">-</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">公司地址</span>
+                                <span class="meta-value" th:text="${jobPost.companyAddressDisplay}">-</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">公司网站</span>
+                                <span class="meta-value" th:text="${jobPost.companyWebsiteDisplay}">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-block">
+                        <strong>岗位链接</strong>
+                        <a class="resource-link spacer-top"
+                           th:if="${jobPost.primaryJobLink != null and !#strings.isEmpty(jobPost.primaryJobLink)}"
+                           th:href="${jobPost.primaryJobLink}"
+                           target="_blank"
+                           rel="noopener noreferrer">查看岗位详情</a>
+                        <span th:if="${jobPost.primaryJobLink == null or #strings.isEmpty(jobPost.primaryJobLink)}">暂无可访问链接</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">基本判断</h2>
+                <ul class="bullet-list compact-list">
+                    <li th:each="item : ${record.hardConditionItems}" th:text="${item}">方向、学历、城市基本适配</li>
+                    <li th:if="${#lists.isEmpty(record.hardConditionItems)}">暂无基本判断说明。</li>
+                </ul>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">维度评分</h2>
+                <ul class="bullet-list compact-list">
+                    <li th:each="item : ${record.scoreBreakdownItems}" th:text="${item}">方向匹配分 28/28</li>
+                    <li th:if="${#lists.isEmpty(record.scoreBreakdownItems)}">暂无评分拆解。</li>
+                </ul>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">匹配理由</h2>
+                <ul class="bullet-list compact-list">
+                    <li th:each="item : ${record.matchReasonItems}" th:text="${item}">当前方向与岗位要求较为一致。</li>
+                    <li th:if="${#lists.isEmpty(record.matchReasonItems)}">暂无匹配理由。</li>
+                </ul>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">核心短板</h2>
+                <ul class="bullet-list compact-list">
+                    <li th:each="item : ${record.weaknessItems}" th:text="${item}">项目经历不足。</li>
+                    <li th:if="${#lists.isEmpty(record.weaknessItems)}">暂无短板分析。</li>
+                </ul>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">扣分原因</h2>
+                <ul class="bullet-list compact-list">
+                    <li th:each="item : ${record.deductionReasonItems}" th:text="${item}">方向偏差。</li>
+                    <li th:if="${#lists.isEmpty(record.deductionReasonItems)}">暂无明显扣分项。</li>
+                </ul>
+            </article>
+
+            <article class="result-card glow-card">
+                <h2 class="card-title">下一步建议</h2>
+                <ul class="bullet-list compact-list">
+                    <li th:each="item : ${record.improvementItems}" th:text="${item}">去简历优化：补齐项目和关键词覆盖。</li>
+                    <li th:if="${#lists.isEmpty(record.improvementItems)}">暂无改进建议。</li>
+                </ul>
+            </article>
+        </section>
+
+        <section class="highlight-card glow-card spacer-top">
+            <div class="section-pill">下一步动作</div>
+            <div class="actions-row spacer-top">
+                <form class="inline-form"
+                      th:if="${userProfile != null and jobPost != null}"
+                      th:action="@{/strength-plan/generate}"
+                      method="post"
+                      data-ai-progress="true"
+                      data-ai-progress-label="正在生成补强方案"
+                      data-ai-progress-steps="整理岗位短板|结合当前档案生成建议|输出补强方案">
+                    <input type="hidden" name="userProfileId" th:value="${userProfile.id}">
+                    <input type="hidden" name="targetJobId" th:value="${jobPost.id}">
+                    <input type="hidden" name="source" value="match-record">
+                    <button type="submit" class="btn btn-primary">生成补强方案</button>
+                </form>
+                <a class="btn btn-secondary"
+                   th:if="${userProfile != null and jobPost != null}"
+                   th:href="@{/resume-optimize(profileId=${userProfile.id},jobId=${jobPost.id},source='match-record')}">去简历优化</a>
+                <a class="btn btn-secondary"
+                   th:if="${userProfile != null and jobPost != null}"
+                   th:href="@{/interview(profileId=${userProfile.id},jobId=${jobPost.id},source='match-record')}">开始模拟面试</a>
+            </div>
+        </section>
+    </div>
+</main>
+<script th:src="@{/js/ai-progress.js}"></script>
+</body>
+</html>

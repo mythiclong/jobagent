@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 简历优化工作台</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='resume-optimize')}"></div>
+
+<main class="page-shell">
+    <div class="page-container resume-workbench">
+        <section class="highlight-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy compact-header-copy">
+                    <div class="eyebrow">Resume Optimize Workbench</div>
+                    <h1 class="page-title compact-title">简历优化工作台</h1>
+                    <p class="page-description compact-description">
+                        在这里完成整体诊断、关键词补齐、模块改写和整份简历优化，再把结果继续带到补强方案和模拟面试。
+                    </p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize/history}">优化历史</a>
+                    <a class="btn btn-secondary" th:href="@{/career-profile(profileId=${userProfile.id},jobId=${jobPost.id})}">返回求职档案</a>
+                    <a class="btn btn-secondary" th:href="@{/interview(profileId=${userProfile.id},jobId=${jobPost.id},source='resume-optimize')}">开始模拟面试</a>
+                    <a class="btn btn-primary" th:href="@{/resume-optimize}">新建优化任务</a>
+                </div>
+            </div>
+
+            <div class="notice-strip spacer-top" th:if="${notice != null and !#strings.isEmpty(notice)}">
+                <strong>操作提示</strong>
+                <span th:text="${notice}">操作完成</span>
+            </div>
+
+            <div class="kpi-grid kpi-grid-compact spacer-top">
+                <div class="kpi-card">
+                    <strong>整体评分</strong>
+                    <div class="score-strip"><span th:text="${record.reviewScore}">80</span> / 100</div>
+                </div>
+                <div class="kpi-card">
+                    <strong>目标岗位</strong>
+                    <span th:text="${jobPost.jobName + ' / ' + jobPost.jobDirection}">Java 后端 / 后端开发</span>
+                </div>
+                <div class="kpi-card">
+                    <strong>当前档案</strong>
+                    <span th:text="${userProfile.studentName + ' / ' + userProfile.targetDirection}">张同学 / 后端开发</span>
+                </div>
+                <div class="kpi-card">
+                    <strong>当前状态</strong>
+                    <span id="resume-optimize-status" class="status-badge status-gemini">已生成</span>
+                    <span class="small-note" th:text="${record.createdAt != null ? #temporals.format(record.createdAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-03-13 10:00:00</span>
+                </div>
+            </div>
+
+            <div class="content-block spacer-top" id="resume-optimize-feedback" style="display:none;">
+                <span class="status-badge status-qwen" id="resume-optimize-feedback-badge">处理中</span>
+                <span id="resume-optimize-feedback-text">正在整理优化结果，请稍候。</span>
+            </div>
+        </section>
+
+        <section class="insight-grid spacer-top">
+            <article class="info-card insight-card">
+                <h2 class="card-title">整体诊断</h2>
+                <p class="meta-value spacer-top" th:text="${aiResult.summary}">整体诊断摘要</p>
+                <div class="content-block spacer-top">
+                    <strong>核心问题</strong>
+                    <ul class="bullet-list compact-list">
+                        <li th:each="problem : ${aiResult.coreProblems}" th:text="${problem}">问题项</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="info-card insight-card">
+                <h2 class="card-title">缺失关键词</h2>
+                <div class="keyword-chip-list spacer-top">
+                    <span class="keyword-chip" th:each="keyword : ${aiResult.missingKeywords}" th:text="${keyword}">Spring Boot</span>
+                </div>
+            </article>
+
+            <article class="info-card insight-card">
+                <h2 class="card-title">优化建议</h2>
+                <ul class="suggestion-list spacer-top">
+                    <li class="suggestion-item" th:each="item : ${aiResult.improvementSuggestions}" th:text="${item}">优化建议</li>
+                </ul>
+            </article>
+        </section>
+
+        <section class="result-card glow-card spacer-top">
+            <div class="module-workbench-head">
+                <h2 class="card-title">分模块优化</h2>
+                <p class="card-description">每个模块都保留原文、优化版本和修改理由，你也可以单独重新生成某一块内容。</p>
+            </div>
+
+            <div class="module-grid">
+                <article class="module-card" data-section="education">
+                    <div class="module-head">
+                        <h3 class="module-title">教育经历</h3>
+                        <span class="status-badge section-source status-gemini">已生成</span>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">原文</strong>
+                        <pre class="preformatted module-original-text" th:text="${aiResult.educationRewrite.original}">原文</pre>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">优化后</strong>
+                        <pre class="preformatted module-rewritten-text" th:text="${aiResult.educationRewrite.rewritten}">优化后</pre>
+                    </div>
+                    <div class="module-reason">
+                        <strong class="module-section-title">修改理由</strong>
+                        <p class="meta-value module-reason-text" th:text="${aiResult.educationRewrite.reason}">修改理由</p>
+                    </div>
+                    <div class="module-actions">
+                        <button class="btn btn-secondary copy-btn" type="button">复制结果</button>
+                        <button class="btn btn-primary section-rewrite-btn" type="button"
+                                th:attr="data-record-id=${record.id},data-section-key='education'">更新这个模块</button>
+                    </div>
+                </article>
+
+                <article class="module-card" data-section="skills">
+                    <div class="module-head">
+                        <h3 class="module-title">技能描述</h3>
+                        <span class="status-badge section-source status-gemini">已生成</span>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">原文</strong>
+                        <pre class="preformatted module-original-text" th:text="${aiResult.skillsRewrite.original}">原文</pre>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">优化后</strong>
+                        <pre class="preformatted module-rewritten-text" th:text="${aiResult.skillsRewrite.rewritten}">优化后</pre>
+                    </div>
+                    <div class="module-reason">
+                        <strong class="module-section-title">修改理由</strong>
+                        <p class="meta-value module-reason-text" th:text="${aiResult.skillsRewrite.reason}">修改理由</p>
+                    </div>
+                    <div class="module-actions">
+                        <button class="btn btn-secondary copy-btn" type="button">复制结果</button>
+                        <button class="btn btn-primary section-rewrite-btn" type="button"
+                                th:attr="data-record-id=${record.id},data-section-key='skills'">更新这个模块</button>
+                    </div>
+                </article>
+
+                <article class="module-card" data-section="projects">
+                    <div class="module-head">
+                        <h3 class="module-title">项目经历</h3>
+                        <span class="status-badge section-source status-gemini">已生成</span>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">原文</strong>
+                        <pre class="preformatted module-original-text" th:text="${aiResult.projectsRewrite.original}">原文</pre>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">优化后</strong>
+                        <pre class="preformatted module-rewritten-text" th:text="${aiResult.projectsRewrite.rewritten}">优化后</pre>
+                    </div>
+                    <div class="module-reason">
+                        <strong class="module-section-title">修改理由</strong>
+                        <p class="meta-value module-reason-text" th:text="${aiResult.projectsRewrite.reason}">修改理由</p>
+                    </div>
+                    <div class="module-actions">
+                        <button class="btn btn-secondary copy-btn" type="button">复制结果</button>
+                        <button class="btn btn-primary section-rewrite-btn" type="button"
+                                th:attr="data-record-id=${record.id},data-section-key='projects'">更新这个模块</button>
+                    </div>
+                </article>
+
+                <article class="module-card" data-section="experience">
+                    <div class="module-head">
+                        <h3 class="module-title">实习 / 校园经历</h3>
+                        <span class="status-badge section-source status-gemini">已生成</span>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">原文</strong>
+                        <pre class="preformatted module-original-text" th:text="${aiResult.experienceRewrite.original}">原文</pre>
+                    </div>
+                    <div class="module-section">
+                        <strong class="module-section-title">优化后</strong>
+                        <pre class="preformatted module-rewritten-text" th:text="${aiResult.experienceRewrite.rewritten}">优化后</pre>
+                    </div>
+                    <div class="module-reason">
+                        <strong class="module-section-title">修改理由</strong>
+                        <p class="meta-value module-reason-text" th:text="${aiResult.experienceRewrite.reason}">修改理由</p>
+                    </div>
+                    <div class="module-actions">
+                        <button class="btn btn-secondary copy-btn" type="button">复制结果</button>
+                        <button class="btn btn-primary section-rewrite-btn" type="button"
+                                th:attr="data-record-id=${record.id},data-section-key='experience'">更新这个模块</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="highlight-card glow-card spacer-top">
+            <div class="full-resume-head">
+                <div class="page-header-copy compact-header-copy">
+                    <h2 class="card-title">整份优化版简历</h2>
+                    <p class="card-description">这里会生成一份更接近可直接投递的简历文本，你可以继续修改后使用。</p>
+                </div>
+                <div class="actions-row">
+                    <button class="btn btn-primary" id="full-rewrite-btn" type="button"
+                            th:attr="data-record-id=${record.id}">生成整份优化版</button>
+                    <button class="btn btn-secondary copy-full-btn" type="button">复制整份简历</button>
+                </div>
+            </div>
+
+            <div class="content-block">
+                <strong>当前状态</strong>
+                <span class="status-badge status-gemini" id="full-status-label">已生成</span>
+            </div>
+
+            <div class="full-resume-deliverable spacer-top">
+                <pre id="full-optimized-resume-raw" class="full-resume-raw"
+                     th:text="${aiResult.fullOptimizedResume}">整份优化版简历</pre>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script>
+    (function () {
+        const feedbackBox = document.getElementById("resume-optimize-feedback");
+        const feedbackBadge = document.getElementById("resume-optimize-feedback-badge");
+        const feedbackText = document.getElementById("resume-optimize-feedback-text");
+        const statusNode = document.getElementById("resume-optimize-status");
+        const fullStatusNode = document.getElementById("full-status-label");
+
+        function setFeedback(text, badgeClass, visible) {
+            if (!feedbackBox || !feedbackText || !feedbackBadge) {
+                return;
+            }
+            feedbackBox.style.display = visible ? "" : "none";
+            feedbackText.textContent = text || "";
+            feedbackBadge.className = "status-badge";
+            if (badgeClass) {
+                feedbackBadge.classList.add(badgeClass);
+            }
+        }
+
+        function updateModuleStatus(node, text, badgeClass) {
+            if (!node) {
+                return;
+            }
+            node.className = "status-badge section-source";
+            if (badgeClass) {
+                node.classList.add(badgeClass);
+            }
+            node.textContent = text;
+        }
+
+        function updatePageStatus(node, text, badgeClass) {
+            if (!node) {
+                return;
+            }
+            node.className = "status-badge";
+            if (badgeClass) {
+                node.classList.add(badgeClass);
+            }
+            node.textContent = text;
+        }
+
+        async function postForm(url, body) {
+            const controller = new AbortController();
+            const timer = window.setTimeout(() => controller.abort(), 60000);
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"},
+                    body: new URLSearchParams(body),
+                    signal: controller.signal
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return await response.json();
+            } finally {
+                window.clearTimeout(timer);
+            }
+        }
+
+        document.querySelectorAll(".copy-btn").forEach((button) => {
+            button.addEventListener("click", async function () {
+                const card = button.closest(".module-card");
+                const target = card ? card.querySelector(".module-rewritten-text") : null;
+                if (!target) {
+                    return;
+                }
+                try {
+                    await navigator.clipboard.writeText(target.textContent || "");
+                    setFeedback("模块结果已复制。", "status-gemini", true);
+                } catch (error) {
+                    setFeedback("复制失败，请手动复制。", "status-fallback", true);
+                }
+            });
+        });
+
+        const copyFullButton = document.querySelector(".copy-full-btn");
+        if (copyFullButton) {
+            copyFullButton.addEventListener("click", async function () {
+                try {
+                    await navigator.clipboard.writeText(document.getElementById("full-optimized-resume-raw").textContent || "");
+                    setFeedback("整份简历已复制。", "status-gemini", true);
+                } catch (error) {
+                    setFeedback("复制失败，请手动复制。", "status-fallback", true);
+                }
+            });
+        }
+
+        document.querySelectorAll(".section-rewrite-btn").forEach((button) => {
+            button.addEventListener("click", async function () {
+                const recordId = button.getAttribute("data-record-id");
+                const sectionKey = button.getAttribute("data-section-key");
+                const card = button.closest(".module-card");
+                if (!recordId || !sectionKey || !card) {
+                    return;
+                }
+
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = "更新中...";
+                updatePageStatus(statusNode, "更新中", "status-qwen");
+                setFeedback(`正在更新${sectionKey}模块，请稍候。`, "status-qwen", true);
+
+                try {
+                    const data = await postForm("/resume-optimize/rewrite-section-json", {recordId, sectionKey});
+                    card.querySelector(".module-original-text").textContent = data.original || "";
+                    card.querySelector(".module-rewritten-text").textContent = data.rewritten || "";
+                    card.querySelector(".module-reason-text").textContent = data.reason || "";
+                    updateModuleStatus(card.querySelector(".section-source"), "已更新", "status-gemini");
+                    updatePageStatus(statusNode, "已更新", "status-gemini");
+                    setFeedback(data.notice || "模块已更新。", "status-gemini", true);
+                } catch (error) {
+                    const timeout = error.name === "AbortError";
+                    updatePageStatus(statusNode, "更新失败", "status-fallback");
+                    setFeedback(timeout ? "模块更新超时，请稍后重试。" : `模块更新失败：${error.message}`, "status-fallback", true);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            });
+        });
+
+        const fullRewriteButton = document.getElementById("full-rewrite-btn");
+        if (fullRewriteButton) {
+            fullRewriteButton.addEventListener("click", async function () {
+                const recordId = fullRewriteButton.getAttribute("data-record-id");
+                if (!recordId) {
+                    return;
+                }
+
+                const originalText = fullRewriteButton.textContent;
+                fullRewriteButton.disabled = true;
+                fullRewriteButton.textContent = "生成中...";
+                updatePageStatus(fullStatusNode, "生成中", "status-qwen");
+                updatePageStatus(statusNode, "更新中", "status-qwen");
+                setFeedback("正在生成整份优化版简历，请稍候。", "status-qwen", true);
+
+                try {
+                    const data = await postForm("/resume-optimize/rewrite-full-json", {recordId});
+                    document.getElementById("full-optimized-resume-raw").textContent = data.fullOptimizedResume || "";
+                    updatePageStatus(fullStatusNode, "已更新", "status-gemini");
+                    updatePageStatus(statusNode, "已更新", "status-gemini");
+                    setFeedback(data.notice || "整份简历已更新。", "status-gemini", true);
+                } catch (error) {
+                    const timeout = error.name === "AbortError";
+                    updatePageStatus(fullStatusNode, "更新失败", "status-fallback");
+                    updatePageStatus(statusNode, "更新失败", "status-fallback");
+                    setFeedback(timeout ? "整份简历生成超时，请稍后重试。" : `整份简历生成失败：${error.message}`, "status-fallback", true);
+                } finally {
+                    fullRewriteButton.disabled = false;
+                    fullRewriteButton.textContent = originalText;
+                }
+            });
+        }
+    })();
+</script>
+</body>
+</html>

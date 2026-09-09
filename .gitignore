@@ -1,0 +1,67 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Local data / databases ###
+/data/
+*.db
+*.mv.db
+*.trace.db
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Environment variables and secrets ###
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+
+### Local exports and temporary tools ###
+*.xlsx
+*.zip
+*.exe
+checkpoint*.txt
+result*.txt
+cp.txt
+tmp-sync-runner.jsh
+*.old-*
+
+### Application local config ###
+application-local.properties
+application-local.yml
+
+### Claude Code ###
+.claude/
+.agents/
+.codex_tmp/
+.tmp-h2-recover/

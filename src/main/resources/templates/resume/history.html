@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 简历诊断历史</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='history')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="section-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Resume Review History</div>
+                    <h1 class="page-title">简历诊断历史</h1>
+                    <p class="page-description">查看过往所有简历诊断记录，便于展示不同学生画像、不同岗位目标下的诊断输出差异。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/history-center}">返回历史中心</a>
+                    <a class="btn btn-primary" th:href="@{/resume-review}">新建诊断</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-card spacer-top">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>记录 ID</th>
+                    <th>用户名称</th>
+                    <th>岗位名称</th>
+                    <th>评分</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(reviews)}">
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <h2 class="empty-title">还没有简历诊断记录</h2>
+                            <p class="empty-text">先完成一次简历诊断，这里就会保留评分、问题和建议结果。</p>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:each="review : ${reviews}">
+                    <td th:text="${review.id}">1</td>
+                    <td th:text="${userNameMap[review.userProfileId] != null ? userNameMap[review.userProfileId] : '画像已删除'}">张三</td>
+                    <td th:text="${jobNameMap[review.jobPostId] != null ? jobNameMap[review.jobPostId] : '岗位已删除'}">Java 开发实习生</td>
+                    <td><span class="score-strip" th:text="${review.reviewScore}">78</span></td>
+                    <td>
+                        <div class="table-actions">
+                            <a class="btn btn-primary" th:href="@{/resume-review/{id}(id=${review.id})}">查看详情</a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
+</body>
+</html>

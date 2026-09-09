@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 简历诊断</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='resume')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <div class="page-header">
+            <div class="page-header-copy">
+                <div class="eyebrow">Resume Review</div>
+                <h1 class="page-title">简历诊断</h1>
+                <p class="page-description">选择求职档案和目标岗位，贴入简历内容后，就能看到当前简历还差什么以及下一步怎么改。</p>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-secondary" th:href="@{/history-center}">我的记录</a>
+                <a class="btn btn-primary" th:href="@{/resume-review/history}">诊断历史</a>
+            </div>
+        </div>
+
+        <div class="content-block spacer-top" th:if="${source != null}">
+            <strong>当前入口</strong>
+            <span th:text="${source == 'match' ? '已从岗位匹配带入目标岗位，建议先看一遍简历是否对齐岗位要求。' : (source == 'career-profile' ? '已从求职档案进入，可以结合当前档案一起检查简历内容。' : '你可以直接开始本次简历诊断。')}">
+                已从岗位匹配带入目标岗位，建议先看一遍简历是否对齐岗位要求。
+            </span>
+        </div>
+
+        <div th:if="${#lists.isEmpty(profiles) or #lists.isEmpty(jobs)}" class="empty-state">
+            <h2 class="empty-title">暂时还不能开始简历诊断</h2>
+            <p class="empty-text">请先准备一份求职档案，再回到这里进行简历诊断。</p>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-primary" th:href="@{/career-profile}">去完善求职档案</a>
+                <a class="btn btn-secondary" th:href="@{/}">返回首页</a>
+            </div>
+        </div>
+
+        <section th:if="${not #lists.isEmpty(profiles) and not #lists.isEmpty(jobs)}" class="form-split">
+            <article class="form-card glow-card">
+                <form th:action="@{/resume-review/analyze}" method="post" class="field-grid">
+                    <div class="field-group">
+                        <label for="userProfileId">选择求职档案</label>
+                        <select class="select-field" id="userProfileId" name="userProfileId" required>
+                            <option value="">请选择求职档案</option>
+                            <option th:each="profile : ${profiles}"
+                                    th:value="${profile.id}"
+                                    th:selected="${selectedProfileId != null and selectedProfileId == profile.id}"
+                                    th:text="${profile.studentName + ' - ' + profile.grade + ' - ' + profile.targetDirection}">
+                                张三 - 大三 - 后端开发
+                            </option>
+                        </select>
+                    </div>
+
+                    <div th:replace="~{fragments/job-picker :: jobPicker('jobPostId', 'jobPostId', '选择目标岗位', ${jobs}, ${selectedJobId}, true, '请选择目标岗位')}"></div>
+
+                    <div class="field-group">
+                        <label for="resumeText">简历文本</label>
+                        <textarea class="textarea-field long" id="resumeText" name="resumeText" required
+                                  placeholder="请直接粘贴完整简历内容，包括教育背景、技能、项目经历、实习经历、自我评价等。"></textarea>
+                    </div>
+
+                    <div class="actions-row">
+                        <button class="btn btn-primary" type="submit">开始诊断</button>
+                        <a class="btn btn-secondary" th:href="@{/match}">先看岗位匹配</a>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="info-card helper-card">
+                <div class="section-pill">你会看到什么</div>
+                <ul class="bullet-list spacer-top">
+                    <li class="bullet-item">
+                        <strong>简历整体状态</strong>
+                        <span>快速知道当前简历离目标岗位还有多大差距。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>关键词和内容缺口</strong>
+                        <span>看清哪些技能、项目表达和岗位要求还没有对齐。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>下一步优化建议</strong>
+                        <span>继续去简历优化，或直接进入补强方案和面试训练。</span>
+                    </li>
+                </ul>
+            </aside>
+        </section>
+    </div>
+</main>
+<script th:src="@{/js/job-picker.js}"></script>
+</body>
+</html>

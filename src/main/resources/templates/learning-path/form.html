@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 补强方案</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='strength-plan')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="form-card glow-card">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Strength Plan</div>
+                    <h1 class="page-title">补强方案</h1>
+                    <p class="page-description">选择当前档案和目标岗位后，系统会结合你的短板给出更具体的学习步骤和准备建议。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/strength-plan/history}">方案历史</a>
+                    <a class="btn btn-secondary" th:href="@{/career-profile}">返回求职档案</a>
+                </div>
+            </div>
+
+            <form class="field-grid spacer-top"
+                  th:action="@{/strength-plan/generate}"
+                  method="post"
+                  data-ai-progress="true"
+                  data-ai-progress-label="正在整理补强方案"
+                  data-ai-progress-steps="读取当前岗位与档案信息|整理匹配短板和简历问题|生成学习步骤和项目建议|返回补强方案结果">
+                <div class="field-group">
+                    <label for="userProfileId">求职档案</label>
+                    <select id="userProfileId" name="userProfileId" class="select-field" required>
+                        <option th:each="profile : ${profiles}"
+                                th:value="${profile.id}"
+                                th:selected="${selectedProfileId != null and selectedProfileId == profile.id}"
+                                th:text="${profile.studentName + ' / ' + profile.targetDirection}">
+                            张同学 / 后端开发
+                        </option>
+                    </select>
+                </div>
+                <div th:replace="~{fragments/job-picker :: jobPicker('targetJobId', 'targetJobId', '目标岗位', ${jobs}, ${selectedJobId}, true, '请选择目标岗位')}"></div>
+                <input type="hidden" name="source" th:value="${source != null ? source : 'manual'}">
+                <div class="actions-row">
+                    <button class="btn btn-primary" type="submit">生成补强方案</button>
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize(profileId=${selectedProfileId},jobId=${selectedJobId},source='strength-plan')}">去简历优化</a>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+<script th:src="@{/js/job-picker.js}"></script>
+<script th:src="@{/js/ai-progress.js}"></script>
+</body>
+</html>

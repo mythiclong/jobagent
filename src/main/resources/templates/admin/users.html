@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 用户记录管理</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='admin')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="empty-state glow-card">
+            <h1 class="page-title">用户记录管理（占位）</h1>
+            <p class="empty-text">
+                当前阶段先预留管理员入口，后续将补充用户画像、简历诊断和模拟面试记录的统一管理能力。
+            </p>
+            <div class="actions-row spacer-top">
+                <a class="btn btn-secondary" th:href="@{/admin}">返回管理入口</a>
+                <a class="btn btn-primary" th:href="@{/my-records}">查看我的记录页</a>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>

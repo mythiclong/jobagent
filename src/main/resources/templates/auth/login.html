@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 登录</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(activePage='login')}"></div>
+
+<main class="page-shell">
+    <div class="page-container">
+        <section class="form-split">
+            <article class="form-card glow-card">
+                <div class="eyebrow">Sign In</div>
+                <h1 class="page-title">登录职航Agent</h1>
+                <p class="page-description">继续你的求职准备，保留档案、记录进度，并在每次优化后接着往前推进。</p>
+
+                <div class="content-block spacer-top" th:if="${loginNotice != null and !#strings.isEmpty(loginNotice)}">
+                    <strong>提示</strong>
+                    <span th:text="${loginNotice}">用户名或密码不正确，请重新输入。</span>
+                </div>
+
+                <form class="field-grid spacer-top" th:action="@{/login}" method="post">
+                    <div class="field-group">
+                        <label for="username">用户名</label>
+                        <input class="input-field" id="username" name="username" type="text" autocomplete="username"
+                               placeholder="输入你的登录名" required>
+                        <div class="field-help">注册后使用用户名和密码登录。</div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="password">密码</label>
+                        <input class="input-field" id="password" name="password" type="password" autocomplete="current-password"
+                               placeholder="输入登录密码" required>
+                        <div class="field-help">登录后会按角色进入对应首页。</div>
+                    </div>
+
+                    <div class="actions-row">
+                        <button class="btn btn-primary" type="submit">登录并继续</button>
+                        <a class="btn btn-secondary" th:href="@{/register}">创建账号</a>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="info-card helper-card">
+                <div class="section-pill">登录后你可以</div>
+                <ul class="bullet-list spacer-top">
+                    <li class="bullet-item">
+                        <strong>保存求职档案</strong>
+                        <span>把目标方向、技能、项目经历和求职目标持续整理到同一份账号下。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>追踪每次优化</strong>
+                        <span>岗位匹配、简历优化、补强方案和模拟面试都会自动归档到你的记录里。</span>
+                    </li>
+                    <li class="bullet-item">
+                        <strong>延续当前进度</strong>
+                        <span>下次回来可以直接从最近一步继续，不会丢失已经完成的准备过程。</span>
+                    </li>
+                </ul>
+                <div class="actions-row spacer-top">
+                    <a class="btn btn-secondary" th:href="@{/about}">了解产品</a>
+                    <a class="btn btn-primary" th:href="@{/}">返回首页</a>
+                </div>
+            </aside>
+        </section>
+    </div>
+</main>
+</body>
+</html>

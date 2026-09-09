@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航 Agent | 智能岗位匹配</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/match-workbench.css}">
+</head>
+<body class="match-workbench-page">
+<header class="workbench-topbar">
+    <div class="workbench-topbar__inner">
+        <a class="workbench-brand" th:href="@{/}">
+            <span class="workbench-brand__mark">职</span>
+            <div class="workbench-brand__copy">
+                <strong>职航 Agent</strong>
+                <span>智能岗位推荐工作台</span>
+            </div>
+        </a>
+
+        <nav class="workbench-menu" aria-label="主导航">
+            <a class="is-active" th:href="@{/match/{profileId}(profileId=${userProfile.id})}">智能岗位匹配</a>
+            <a th:href="@{/resume-optimize(profileId=${userProfile.id})}">简历优化</a>
+            <a th:href="@{/interview(profileId=${userProfile.id})}">模拟面试</a>
+            <a th:href="@{/strength-plan(userProfileId=${userProfile.id})}">成长路径</a>
+            <a th:href="@{/career-profile(profileId=${userProfile.id})}">我的档案</a>
+        </nav>
+
+        <div class="workbench-topbar__actions">
+            <div class="workbench-user-chip">
+                <strong th:text="${userProfile.studentName}">张同学</strong>
+                <span th:text="${userProfile.targetDirection}">产品方向</span>
+            </div>
+            <a class="wb-btn wb-btn-ghost" th:href="@{/history-center}">我的记录</a>
+            <form th:if="${viewer.authenticated}" th:action="@{/logout}" method="post">
+                <button type="submit" class="wb-btn wb-btn-ghost">退出</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page-shell">
+    <div class="page-container workbench-page">
+        <section class="workbench-hero">
+            <div class="workbench-hero__copy">
+                <span class="workbench-eyebrow">Rule Base + AI Enhancement</span>
+                <h1>把规则候选池和 AI 增强重排，变成可直接决策的推荐台</h1>
+                <p>
+                    当前结果先由规则底座完成硬条件筛选和基础打分，再结合你的求职档案、最近简历信号与偏好条件做 AI 增强。
+                    你可以直接在这页看清推荐顺序、风险点和下一步动作。
+                </p>
+                <div class="workbench-hero__actions">
+                    <a class="wb-btn wb-btn-primary" th:href="@{/strength-plan(userProfileId=${userProfile.id})}">生成成长路径</a>
+                    <a class="wb-btn wb-btn-secondary" th:href="@{/resume-optimize(profileId=${userProfile.id})}">去简历优化</a>
+                    <a class="wb-btn wb-btn-ghost" th:href="@{/match}">重新选择档案</a>
+                </div>
+            </div>
+            <aside class="workbench-hero__ai">
+                <div class="workbench-ai-card">
+                    <div class="workbench-ai-card__row">
+                        <span class="workbench-ai-source"
+                              th:classappend="${matchAiMetadata != null and matchAiMetadata.aiUsed} ? ' is-ai' : ' is-rule'"
+                              th:text="${matchAiSourceLabel}">Rule</span>
+                        <span class="workbench-ai-model"
+                              th:if="${matchAiMetadata != null and matchAiMetadata.modelName != null and !#strings.isEmpty(matchAiMetadata.modelName)}"
+                              th:text="${matchAiMetadata.modelName}">gemini-pro</span>
+                    </div>
+                    <strong>本轮增强摘要</strong>
+                    <p th:text="${matchAiSummary != null and !#strings.isEmpty(matchAiSummary) ? matchAiSummary : '当前按规则候选结果展示，AI 不可用时会自动回退。'}">
+                        当前按规则候选结果展示，AI 不可用时会自动回退。
+                    </p>
+                    <span class="workbench-ai-note"
+                          th:if="${matchAiMetadata != null and matchAiMetadata.fallbackReason != null and !#strings.isEmpty(matchAiMetadata.fallbackReason)}"
+                          th:text="${matchAiMetadata.fallbackReason}">AI 不可用，已回退到规则结果。</span>
+                </div>
+            </aside>
+        </section>
+
+        <section class="workbench-stats" th:if="${not #lists.isEmpty(matchResults)}">
+            <article class="workbench-stat-card">
+                <span>推荐岗位数</span>
+                <strong th:text="${matchResultCount}">24</strong>
+                <small>当前可进入增强重排的候选结果</small>
+            </article>
+            <article class="workbench-stat-card">
+                <span>最高综合分</span>
+                <strong th:text="${highestCompositeScore}">91</strong>
+                <small>规则与 AI 叠加后的最佳结果</small>
+            </article>
+            <article class="workbench-stat-card">
+                <span>平均偏好贴合度</span>
+                <strong th:text="${averagePreferenceFitPercent + '%'}">78%</strong>
+                <small>综合城市、薪资、岗位与行业偏好</small>
+            </article>
+            <article class="workbench-stat-card">
+                <span>高风险岗位数量</span>
+                <strong th:text="${highRiskJobCount}">4</strong>
+                <small>建议先观察或补齐短板后再投递</small>
+            </article>
+        </section>
+
+        <section class="workbench-flow-card">
+            <div class="workbench-section-head">
+                <div>
+                    <span class="workbench-eyebrow">Matching Pipeline</span>
+                    <h2>推荐流程可视化</h2>
+                </div>
+                <p>用户档案与岗位文本先进入规则筛选，再由 AI 在 Top24 候选池内做解释增强和重排序。</p>
+            </div>
+            <ol class="workbench-flow">
+                <li class="is-done"><span>1</span><strong>用户档案</strong><small>目标方向与简历信号</small></li>
+                <li class="is-done"><span>2</span><strong>规则筛选</strong><small>硬条件与基础打分</small></li>
+                <li class="is-done"><span>3</span><strong>Top24 候选池</strong><small>稳定可解释的候选集</small></li>
+                <li class="is-done"><span>4</span><strong>AI 增强</strong><small>偏好贴合与语义判断</small></li>
+                <li class="is-active"><span>5</span><strong>综合重排</strong><small>输出优先级与风险</small></li>
+                <li><span>6</span><strong>最终推荐</strong><small>进入准备与投递动作</small></li>
+            </ol>
+        </section>
+
+        <section class="workbench-control-board">
+            <div class="workbench-control-card">
+                <div class="workbench-section-head workbench-section-head--tight">
+                    <div>
+                        <span class="workbench-eyebrow">Smart Preference</span>
+                        <h2>按当前偏好重新智能匹配</h2>
+                    </div>
+                    <p>这里的偏好会直接进入规则修正和 AI 增强，而不是只做前端展示过滤。</p>
+                </div>
+
+                <form class="workbench-preference-form"
+                      th:action="@{/match/{profileId}(profileId=${userProfile.id})}"
+                      method="get">
+                    <div class="field-group">
+                        <label for="preferredCity">城市</label>
+                        <input class="input-field" id="preferredCity" name="preferredCity" type="text"
+                               th:value="${preferenceInput.preferredCity}" placeholder="如 广州 / 深圳">
+                    </div>
+                    <div class="field-group">
+                        <label for="preferredSalary">薪资</label>
+                        <input class="input-field" id="preferredSalary" name="preferredSalary" type="text"
+                               th:value="${preferenceInput.preferredSalary}" placeholder="如 6k-8k">
+                    </div>
+                    <div class="field-group">
+                        <label for="preferredRole">岗位</label>
+                        <input class="input-field" id="preferredRole" name="preferredRole" type="text"
+                               th:value="${preferenceInput.preferredRole}" placeholder="如 产品经理 / 产品助理">
+                    </div>
+                    <div class="field-group">
+                        <label for="preferredIndustry">行业</label>
+                        <input class="input-field" id="preferredIndustry" name="preferredIndustry" type="text"
+                               th:value="${preferenceInput.preferredIndustry}" placeholder="如 教育 / 互联网 / 游戏">
+                    </div>
+                    <div class="field-group">
+                        <label for="preferredJobNature">岗位性质</label>
+                        <input class="input-field" id="preferredJobNature" name="preferredJobNature" type="text"
+                               th:value="${preferenceInput.preferredJobNature}" placeholder="如 校招 / 实习 / 全职">
+                    </div>
+                    <div class="workbench-preference-actions">
+                        <button type="submit" class="wb-btn wb-btn-primary">按当前偏好智能筛选</button>
+                        <a class="wb-btn wb-btn-secondary" th:href="@{/match/{profileId}(profileId=${userProfile.id})}">恢复档案偏好</a>
+                    </div>
+                </form>
+
+                <div class="workbench-preference-summary">
+                    <strong>当前偏好摘要</strong>
+                    <p th:text="${preferenceSummaryText}">城市 广州 / 薪资 6k-8k / 岗位 产品经理</p>
+                    <div class="workbench-inline-badges" th:if="${not #lists.isEmpty(preferenceSummaryItems)}">
+                        <span class="workbench-soft-badge" th:each="item : ${preferenceSummaryItems}" th:text="${item}">城市 广州</span>
+                    </div>
+                    <span class="workbench-hint" th:if="${preferenceInput.temporaryOverrideApplied}">当前结果已使用临时偏好覆盖本次匹配。</span>
+                </div>
+            </div>
+
+            <div class="workbench-control-card">
+                <div class="workbench-section-head workbench-section-head--tight">
+                    <div>
+                        <span class="workbench-eyebrow">Browse Filters</span>
+                        <h2>顶部筛选栏</h2>
+                    </div>
+                    <p>用于浏览已返回结果，不会改写规则底座和 AI 计算。</p>
+                </div>
+
+                <div class="workbench-filter-toolbar" data-match-filter-form th:if="${not #lists.isEmpty(matchResults)}">
+                    <div class="field-group">
+                        <label for="browseCity">城市</label>
+                        <select class="select-field" id="browseCity" data-match-filter="city">
+                            <option value="">全部城市</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label for="browseSalary">薪资</label>
+                        <select class="select-field" id="browseSalary" data-match-filter="salary">
+                            <option value="">全部薪资</option>
+                            <option value="lt3000">3k 以下</option>
+                            <option value="3000-5000">3k-5k</option>
+                            <option value="5000-8000">5k-8k</option>
+                            <option value="8000-12000">8k-12k</option>
+                            <option value="gte12000">12k 以上</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label for="browseIndustry">行业</label>
+                        <select class="select-field" id="browseIndustry" data-match-filter="industry">
+                            <option value="">全部行业</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label for="browseNature">岗位性质</label>
+                        <select class="select-field" id="browseNature" data-match-filter="nature">
+                            <option value="">全部性质</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label for="browseRisk">风险等级</label>
+                        <select class="select-field" id="browseRisk" data-match-filter="risk">
+                            <option value="">全部风险</option>
+                            <option value="low">低风险</option>
+                            <option value="medium">中风险</option>
+                            <option value="high">高风险</option>
+                        </select>
+                    </div>
+                    <div class="workbench-filter-actions">
+                        <button type="button" class="wb-btn wb-btn-ghost" data-match-filter-reset>清空筛选</button>
+                        <div class="workbench-filter-count">
+                            <strong><span data-match-visible-count th:text="${matchResultCount}">0</span> / <span data-match-total-count th:text="${matchResultCount}">0</span></strong>
+                            <span>当前可浏览岗位</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="workbench-layout" th:if="${not #lists.isEmpty(matchResults)}">
+            <div class="workbench-list-pane">
+                <div class="workbench-list-pane__head">
+                    <div>
+                        <span class="workbench-eyebrow">Recommended Jobs</span>
+                        <h2>推荐岗位列表</h2>
+                    </div>
+                    <p>点击左侧岗位卡片，右侧会实时展示规则解释、AI 增强原因、风险提示和下一步建议。</p>
+                </div>
+
+                <div class="workbench-empty-panel" hidden data-match-filter-empty>
+                    <h3>当前筛选条件下没有可浏览岗位</h3>
+                    <p>可以清空顶部浏览筛选，或者调整智能偏好后重新发起匹配。</p>
+                    <button type="button" class="wb-btn wb-btn-secondary" data-match-filter-reset>清空筛选</button>
+                </div>
+
+                <div class="workbench-card-list" data-match-card-list>
+                    <article class="workbench-job-card"
+                             th:each="result, stat : ${matchResults}"
+                             th:classappend="${stat.first} ? ' is-active'"
+                             tabindex="0"
+                             role="button"
+                             data-match-card
+                             th:attr="data-city=${result.jobPost.readableLocationFilterValue},
+                                      data-salary-min=${result.jobPost.monthlySalaryMin != null ? result.jobPost.monthlySalaryMin : ''},
+                                      data-salary-max=${result.jobPost.monthlySalaryMax != null ? result.jobPost.monthlySalaryMax : ''},
+                                      data-salary-unit=${result.jobPost.salaryUnitType},
+                                      data-industry=${result.industryDisplay},
+                                      data-nature=${result.jobPost.jobNatureDisplay},
+                                      data-risk=${result.riskLevelKey},
+                                      data-keywords=${result.searchableText}">
+                        <div class="workbench-job-card__header">
+                            <div class="workbench-job-card__rank" th:text="${'#' + (stat.index + 1)}">#1</div>
+                            <span class="workbench-priority-badge"
+                                  th:classappend="${' is-' + result.recommendationBadgeTone}"
+                                  th:text="${result.recommendationBadgeLabel}">强推荐</span>
+                            <div class="workbench-job-card__score">
+                                <span>综合分</span>
+                                <strong th:text="${result.displayCompositeScore}">86</strong>
+                            </div>
+                        </div>
+
+                        <div class="workbench-job-card__title">
+                            <h3 th:text="${result.jobPost.displayTitle}">Java 后端工程师</h3>
+                            <p th:text="${result.jobPost.companyNameDisplay}">示例公司</p>
+                        </div>
+
+                        <div class="workbench-job-card__meta">
+                            <span th:text="${result.jobPost.readableLocationDisplay}">广州</span>
+                            <span th:text="${result.jobPost.salaryRangeDisplay}">8k-12k / 月</span>
+                            <span th:text="${result.jobPost.jobNatureDisplay}">校招</span>
+                            <span th:text="${result.industryDisplay}">互联网</span>
+                        </div>
+
+                        <div class="workbench-job-card__scores">
+                            <div><span>规则分</span><strong th:text="${result.matchScore}">82</strong></div>
+                            <div><span>AI 增强分</span><strong th:text="${result.aiRerankScore != null ? result.aiRerankScore : '--'}">88</strong></div>
+                            <div><span>偏好贴合</span><strong th:text="${result.preferenceFitPercent + '%'}">92%</strong></div>
+                        </div>
+
+                        <div class="workbench-job-card__section">
+                            <span>AI 推荐理由</span>
+                            <p th:text="${result.aiEnhanced ? result.aiMatchReason : result.matchReason}">方向一致，技能命中较高，适合作为优先准备岗位。</p>
+                        </div>
+
+                        <div class="workbench-job-card__section">
+                            <span>风险提示</span>
+                            <p th:if="${not #lists.isEmpty(result.aiRiskPointItems)}"
+                               th:text="${result.aiRiskPointItems[0]}">项目要求偏高</p>
+                            <p th:if="${#lists.isEmpty(result.aiRiskPointItems) and not #lists.isEmpty(result.primaryWeaknesses)}"
+                               th:text="${result.primaryWeaknesses[0]}">项目经历偏少</p>
+                            <p th:if="${#lists.isEmpty(result.aiRiskPointItems) and #lists.isEmpty(result.primaryWeaknesses)}">当前没有明显高风险信号</p>
+                        </div>
+
+                        <div class="workbench-job-card__section">
+                            <span>下一步建议</span>
+                            <p th:if="${result.suggestedNextAction != null and !#strings.isEmpty(result.suggestedNextAction)}"
+                               th:text="${result.suggestedNextAction}">先完善项目表达，再进入简历优化。</p>
+                            <p th:if="${result.suggestedNextAction == null or #strings.isEmpty(result.suggestedNextAction)}">优先补齐当前短板，再进入简历优化和模拟面试。</p>
+                        </div>
+
+                        <div class="workbench-inline-badges" th:if="${not #lists.isEmpty(result.shortTagSummaryItems)}">
+                            <span class="workbench-soft-badge" th:each="tag : ${result.shortTagSummaryItems}" th:text="${tag}">城市更贴合</span>
+                        </div>
+
+                        <template data-match-detail-template>
+                            <div th:replace="~{match/fragments/result-detail :: detail(result=${result}, userProfile=${userProfile})}"></div>
+                        </template>
+                    </article>
+                </div>
+            </div>
+
+            <aside class="workbench-detail-pane">
+                <div class="workbench-detail-pane__inner">
+                    <div class="workbench-list-pane__head">
+                        <div>
+                            <span class="workbench-eyebrow">Detail Panel</span>
+                            <h2>推荐解释面板</h2>
+                        </div>
+                        <p>当前面板会跟随左侧选中的岗位卡片变化，帮助你快速决定先准备哪一个岗位。</p>
+                    </div>
+
+                    <div class="workbench-detail-placeholder" hidden data-match-detail-empty>
+                        <h3>还没有可展示的岗位</h3>
+                        <p>先调整顶部浏览筛选，或重新应用智能偏好，随后再查看右侧解释内容。</p>
+                    </div>
+
+                    <div data-match-detail-host th:if="${featuredResult != null}">
+                        <div th:replace="~{match/fragments/result-detail :: detail(result=${featuredResult}, userProfile=${userProfile})}"></div>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <section th:if="${#lists.isEmpty(matchResults)}" class="workbench-empty-state">
+            <span class="workbench-empty-state__eyebrow">No Results</span>
+            <h2>当前还没有可展示的匹配结果</h2>
+            <p>请先补充求职档案，或调整岗位与偏好条件后重新计算匹配结果。</p>
+            <div class="workbench-hero__actions">
+                <a class="wb-btn wb-btn-secondary" th:href="@{/career-profile}">查看我的档案</a>
+                <a class="wb-btn wb-btn-primary" th:href="@{/match}">返回岗位匹配</a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script th:src="@{/js/ai-progress.js}"></script>
+<script th:src="@{/js/match-workbench.js}"></script>
+</body>
+</html>

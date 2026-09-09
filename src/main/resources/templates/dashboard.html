@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职航Agent | 首页</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="page-home">
+<div th:replace="~{fragments/navbar :: navbar(activePage='dashboard')}"></div>
+
+<main class="page-shell">
+    <div class="page-container home-page-container">
+        <section class="home-hero hero-grid" th:if="${!viewer.authenticated}">
+            <article class="highlight-card glow-card hero-main home-hero-main">
+                <div class="hero-copy-stack">
+                    <span class="hero-chip strong">实习 / 校招准备主线</span>
+                    <div>
+                        <div class="eyebrow">Job Readiness</div>
+                        <h1 class="hero-title home-hero-title">把岗位选择、简历优化和面试训练，收成一条更清晰的求职准备线</h1>
+                        <p class="hero-description home-hero-description">面向准备实习和校招的同学，把今天最该推进的动作排清楚。</p>
+                    </div>
+                </div>
+                <div class="hero-actions home-hero-actions">
+                    <a class="btn btn-primary" th:href="@{/login}">开始准备</a>
+                    <a class="btn btn-secondary" th:href="@{/register}">创建账号</a>
+                </div>
+                <p class="home-hero-note">从建档、匹配到优化和训练，始终围绕同一个目标岗位推进。</p>
+            </article>
+
+            <aside class="highlight-card home-hero-side">
+                <div class="home-side-intro">
+                    <div class="home-side-label">状态概览</div>
+                    <h2 class="home-side-title">第一次使用，也能快速知道该从哪里开始</h2>
+                    <p class="home-side-description">不需要先理解复杂流程，先按准备路径往前走，就能逐步沉淀自己的求职素材。</p>
+                </div>
+
+                <div class="home-side-section">
+                    <div class="home-side-label">适合人群</div>
+                    <div class="home-side-chip-row">
+                        <span class="tag-chip">准备实习</span>
+                        <span class="tag-chip">准备校招</span>
+                        <span class="tag-chip">需要梳理求职节奏</span>
+                    </div>
+                </div>
+
+                <div class="home-side-section">
+                    <div class="home-side-label">核心能力</div>
+                    <ul class="overview-list home-overview-list">
+                        <li class="overview-item home-overview-item">
+                            <strong>岗位推荐</strong>
+                            <span>先找更值得优先准备的目标岗位。</span>
+                        </li>
+                        <li class="overview-item home-overview-item">
+                            <strong>简历优化</strong>
+                            <span>把问题拆成可以直接执行的修改动作。</span>
+                        </li>
+                        <li class="overview-item home-overview-item">
+                            <strong>模拟面试</strong>
+                            <span>围绕目标岗位做训练，提前暴露短板。</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="home-side-section home-path-panel">
+                    <div class="home-side-label">今天可以这样开始</div>
+                    <div class="home-path-flow">
+                        <span class="home-path-step">建档</span>
+                        <span class="home-path-step">匹配</span>
+                        <span class="home-path-step">优化</span>
+                        <span class="home-path-step">训练</span>
+                    </div>
+                    <a class="feature-link home-side-link" th:href="@{/about}">
+                        <span>查看产品说明</span>
+                        <span aria-hidden="true">&rarr;</span>
+                    </a>
+                </div>
+            </aside>
+        </section>
+
+        <section class="home-entry-grid home-section-gap" th:if="${!viewer.authenticated}">
+            <article class="feature-card capability-card">
+                <div class="capability-card-head">
+                    <span class="capability-icon">01</span>
+                    <span class="capability-tag">岗位入口</span>
+                </div>
+                <div class="capability-card-copy">
+                    <h2 class="feature-title">岗位匹配</h2>
+                    <p class="feature-description">优先筛出更值得投入准备的岗位方向。</p>
+                </div>
+                <a class="feature-link capability-link" th:href="@{/match}">
+                    <span>进入岗位匹配</span>
+                    <span aria-hidden="true">&rarr;</span>
+                </a>
+            </article>
+            <article class="feature-card capability-card">
+                <div class="capability-card-head">
+                    <span class="capability-icon">02</span>
+                    <span class="capability-tag">内容补强</span>
+                </div>
+                <div class="capability-card-copy">
+                    <h2 class="feature-title">简历优化</h2>
+                    <p class="feature-description">围绕目标岗位把简历问题整理成可改清单。</p>
+                </div>
+                <a class="feature-link capability-link" th:href="@{/resume-optimize}">
+                    <span>进入简历优化</span>
+                    <span aria-hidden="true">&rarr;</span>
+                </a>
+            </article>
+            <article class="feature-card capability-card">
+                <div class="capability-card-head">
+                    <span class="capability-icon">03</span>
+                    <span class="capability-tag">训练验证</span>
+                </div>
+                <div class="capability-card-copy">
+                    <h2 class="feature-title">模拟面试</h2>
+                    <p class="feature-description">围绕目标岗位练习问答，提前发现准备盲区。</p>
+                </div>
+                <a class="feature-link capability-link" th:href="@{/interview}">
+                    <span>进入模拟面试</span>
+                    <span aria-hidden="true">&rarr;</span>
+                </a>
+            </article>
+        </section>
+
+        <section class="highlight-card glow-card" th:if="${viewer.user and homeJourneySnapshot != null}">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Today Focus</div>
+                    <h1 class="page-title" th:text="${viewer.displayName + '，先推进今天最值得完成的一步'}">同学，先推进今天最值得完成的一步</h1>
+                    <p class="page-description">这里会展示你当前的准备状态、最近进展和下一步建议，帮助你回来就能继续往前推进。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-primary"
+                       th:href="${homeJourneySnapshot.nextStepRecommendation.href}"
+                       th:text="${homeJourneySnapshot.nextStepRecommendation.buttonLabel}">继续准备</a>
+                    <a class="btn btn-secondary" th:href="@{/resume-optimize}">去简历优化</a>
+                    <a class="btn btn-secondary" th:href="@{/history-center}">查看我的记录</a>
+                </div>
+            </div>
+
+            <div class="journey-status-grid spacer-top">
+                <article class="content-block">
+                    <strong>当前准备状态</strong>
+                    <span th:text="${homeJourneySnapshot.statusSummary.completionLabel + ' / 完整度 ' + homeJourneySnapshot.statusSummary.completionPercent + '%'}">
+                        基础信息已具备 / 完整度 60%
+                    </span>
+                    <span class="small-note"
+                          th:text="${homeJourneySnapshot.statusSummary.targetJobStatus + '；' + homeJourneySnapshot.statusSummary.latestResumeStatus}">
+                        已带入目标岗位；最近一次简历处理已完成
+                    </span>
+                </article>
+                <article class="content-block">
+                    <strong>当前推荐动作</strong>
+                    <span th:text="${homeJourneySnapshot.nextStepRecommendation.title}">开始岗位匹配</span>
+                    <span class="small-note" th:text="${homeJourneySnapshot.nextStepRecommendation.description}">
+                        先看清最值得优先准备的岗位，再决定接下来补什么。
+                    </span>
+                </article>
+                <article class="content-block">
+                    <strong>最近一次更新</strong>
+                    <span th:text="${homeJourneySnapshot.statusSummary.latestSyncStatus}">最近一次识别结果可同步到求职档案</span>
+                    <span class="small-note">你也可以继续做简历优化、补强方案和模拟面试。</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="entry-grid spacer-top" th:if="${viewer.user}">
+            <article class="feature-card">
+                <h2 class="feature-title">求职档案</h2>
+                <p class="feature-description">查看当前档案、目标岗位和最近同步状态。</p>
+                <a class="feature-link" th:href="@{/career-profile}">进入求职档案</a>
+            </article>
+            <article class="feature-card">
+                <h2 class="feature-title">岗位匹配</h2>
+                <p class="feature-description">快速筛出更值得优先投递和准备的岗位列表。</p>
+                <a class="feature-link" th:href="@{/match}">进入岗位匹配</a>
+            </article>
+            <article class="feature-card">
+                <h2 class="feature-title">补强方案</h2>
+                <p class="feature-description">把当前短板整理成更具体的学习和准备步骤。</p>
+                <a class="feature-link" th:href="@{/strength-plan}">查看补强方案</a>
+            </article>
+            <article class="feature-card">
+                <h2 class="feature-title">模拟面试</h2>
+                <p class="feature-description">围绕目标岗位做问答训练，检验准备是否真正到位。</p>
+                <a class="feature-link" th:href="@{/interview}">进入模拟面试</a>
+            </article>
+            <article class="feature-card">
+                <h2 class="feature-title">我的记录</h2>
+                <p class="feature-description">统一回看匹配、补强、简历优化和面试记录。</p>
+                <a class="feature-link" th:href="@{/history-center}">查看我的记录</a>
+            </article>
+            <article class="feature-card">
+                <h2 class="feature-title">简历优化</h2>
+                <p class="feature-description">继续补齐关键词、项目表达和整份简历内容。</p>
+                <a class="feature-link" th:href="@{/resume-optimize}">去简历优化</a>
+            </article>
+        </section>
+
+        <section class="highlight-card glow-card" th:if="${viewer.admin}">
+            <div class="page-header">
+                <div class="page-header-copy">
+                    <div class="eyebrow">Admin Workspace</div>
+                    <h1 class="page-title">进入管理后台</h1>
+                    <p class="page-description">后台功能已独立收纳，不会出现在普通用户主线里。你可以直接进入管理首页继续维护岗位、题库和记录数据。</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-primary" th:href="@{/admin}">进入管理首页</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+</body>
+</html>
